@@ -37,6 +37,7 @@ function Shell() {
       </main>
       <footer><div className="wrap fcol">
         <div>© 2026 WAHYU STORE. Pesanan diproses melalui WhatsApp.</div>
+        <div className="muted">Merek dan logo milik pemiliknya masing-masing. WAHYU STORE tidak berafiliasi dengan merek yang ditampilkan.</div>
         <div className="flinks"><Link to="/">Beranda</Link><Link to="/cek">Cek Pesanan</Link><Link to="/keranjang">Keranjang</Link></div>
       </div></footer>
     </>

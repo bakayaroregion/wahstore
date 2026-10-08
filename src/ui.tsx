@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState, type CSSProperties } from 'react'
 
 const ICONS = {
   shield: <path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z" />,
@@ -38,17 +38,41 @@ export function catIcon(name: string): IconName {
   return 'pkg'
 }
 
-const TILES: { x: number; y: number; c: string; i: IconName; d: number }[] = [
-  { x: 4, y: 12, c: '#be123c', i: 'play', d: 7 }, { x: 14, y: 6, c: '#15803d', i: 'music', d: 9 },
-  { x: 3, y: 42, c: '#0f766e', i: 'cloud', d: 8 }, { x: 10, y: 60, c: '#a16207', i: 'video', d: 10 },
-  { x: 5, y: 82, c: '#be185d', i: 'music', d: 7 }, { x: 15, y: 90, c: '#0e7490', i: 'chat', d: 11 },
-  { x: 90, y: 10, c: '#475569', i: 'key', d: 9 }, { x: 80, y: 5, c: '#6d28d9', i: 'chat', d: 8 },
-  { x: 94, y: 36, c: '#1e3a8a', i: 'play', d: 10 }, { x: 85, y: 52, c: '#6d28d9', i: 'bot', d: 7 },
-  { x: 93, y: 70, c: '#0e7490', i: 'cloud', d: 9 }, { x: 82, y: 86, c: '#9a3412', i: 'book', d: 11 },
-  { x: 24, y: 24, c: '#1d4ed8', i: 'edit', d: 12 }, { x: 72, y: 92, c: '#166534', i: 'star', d: 8 },
+interface Brand { slug: string; bg: string; dark: boolean; x: number; y: number; s: number; d: number; dx: number; dy: number }
+// Ikon dari Simple Icons (lisensi CC0) di /public/brands. Tambah atau hapus baris untuk mengatur ikon yang melayang.
+// Nama dan logo adalah merek dagang pemiliknya masing-masing.
+const BRANDS: Brand[] = [
+  { slug: 'netflix', bg: '#E50914', dark: false, x: 3, y: 10, s: 42, d: 8, dx: 8, dy: -14 },
+  { slug: 'telegram', bg: '#26A5E4', dark: false, x: 5, y: 30, s: 40, d: 9, dx: -6, dy: 12 },
+  { slug: 'youtube', bg: '#FF0000', dark: false, x: 11, y: 46, s: 38, d: 10, dx: 10, dy: -10 },
+  { slug: 'facebook', bg: '#0866FF', dark: false, x: 3, y: 60, s: 42, d: 7, dx: -8, dy: -12 },
+  { slug: 'tiktok', bg: '#161616', dark: false, x: 12, y: 74, s: 38, d: 11, dx: 8, dy: 12 },
+  { slug: 'whatsapp', bg: '#25D366', dark: false, x: 4, y: 88, s: 40, d: 9, dx: 10, dy: -10 },
+  { slug: 'instagram', bg: 'linear-gradient(45deg,#f09433,#dc2743 55%,#bc1888)', dark: false, x: 92, y: 8, s: 42, d: 8, dx: -8, dy: 14 },
+  { slug: 'x', bg: '#161616', dark: false, x: 84, y: 20, s: 36, d: 10, dx: 8, dy: -12 },
+  { slug: 'discord', bg: '#5865F2', dark: false, x: 94, y: 32, s: 40, d: 9, dx: -10, dy: 10 },
+  { slug: 'twitch', bg: '#9146FF', dark: false, x: 86, y: 46, s: 38, d: 11, dx: 6, dy: -14 },
+  { slug: 'snapchat', bg: '#FFFC00', dark: true, x: 93, y: 60, s: 40, d: 8, dx: -8, dy: -10 },
+  { slug: 'pinterest', bg: '#E60023', dark: false, x: 85, y: 74, s: 38, d: 10, dx: 10, dy: 12 },
+  { slug: 'reddit', bg: '#FF4500', dark: false, x: 94, y: 86, s: 40, d: 9, dx: -6, dy: -12 },
+  { slug: 'spotify', bg: '#1DB954', dark: false, x: 82, y: 92, s: 40, d: 11, dx: 8, dy: 10 },
+  { slug: 'canva', bg: '#00A7B5', dark: false, x: 14, y: 90, s: 36, d: 10, dx: -8, dy: -10 },
 ]
 
-// Latar angkasa dekoratif: bintang, bintang jatuh, dan ubin ikon generik (bukan logo merek).
+function BrandTile({ b, i }: { b: Brand; i: number }) {
+  const [bad, setBad] = useState(false)
+  const st = { left: `${b.x}%`, top: `${b.y}%`, width: b.s, height: b.s, background: b.bg, animationDuration: `${b.d}s`, animationDelay: `-${i * 1.3}s`, '--dx': `${b.dx}px`, '--dy': `${b.dy}px` } as CSSProperties
+  return (
+    <span className="tile" style={st}>
+      {bad ? <b>{b.slug[0].toUpperCase()}</b> : <img src={`/brands/${b.slug}.svg`} alt="" width={Math.round(b.s * 0.52)} height={Math.round(b.s * 0.52)} className={b.dark ? '' : 'inv'} onError={() => setBad(true)} />}
+    </span>
+  )
+}
+
+// [x%, y%, durasi detik, offset detik]. Bintang jatuh terus berulang tanpa henti.
+const METEORS = [[95, 2, 6, 0], [70, -5, 7, 2], [45, 8, 8, 5], [100, 25, 5, 1], [82, 12, 9, 7], [60, 30, 6, 3], [30, -8, 7, 4], [110, 40, 8, 6], [15, 15, 9, 8]]
+
+// Latar angkasa dekoratif: bintang diam, bintang jatuh, dan ubin ikon aplikasi yang melayang.
 export function Space() {
   const stars = useMemo(() => {
     let s = 7; const r = () => (s = (s * 16807) % 2147483647) / 2147483647
@@ -57,8 +81,8 @@ export function Space() {
   return (
     <div className="space" aria-hidden="true">
       {stars.map((t, k) => <i className="star" key={k} style={{ left: `${t.x}%`, top: `${t.y}%`, width: t.z, height: t.z, opacity: t.o }} />)}
-      {[{ x: 70, y: 8, t: 0 }, { x: 40, y: 30, t: 5 }, { x: 88, y: 55, t: 9 }].map((s, k) => <i className="shoot" key={k} style={{ left: `${s.x}%`, top: `${s.y}%`, animationDelay: `${s.t}s` }} />)}
-      {TILES.map((t, k) => <span className="tile" key={k} style={{ left: `${t.x}%`, top: `${t.y}%`, background: t.c, animationDuration: `${t.d}s`, animationDelay: `-${k}s` }}><Icon n={t.i} size={18} /></span>)}
+      {METEORS.map((m, k) => <i className="shoot" key={k} style={{ left: `${m[0]}%`, top: `${m[1]}%`, '--t': `${m[2]}s`, animationDelay: `-${m[3]}s` } as CSSProperties} />)}
+      {BRANDS.map((b, k) => <BrandTile b={b} i={k} key={b.slug} />)}
     </div>
   )
 }
