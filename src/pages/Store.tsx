@@ -98,7 +98,7 @@ export default function Store() {
       {(reviews.length > 0 || (stats && stats.customers > 0)) && (
         <section className="sec">
           {reviews.length > 0 && <>
-            <div className="c"><span className="badge"><Icon n="chat" size={14} /> Testimoni Pelanggan</span></div>
+            <div className="c"><span className="badge live"><Icon n="chat" size={14} /> Testimoni Pelanggan</span></div>
             <h2 className="h2c">Apa Kata <span className="g">Mereka?</span></h2>
             <p className="sub">Ulasan dari pelanggan kami</p>
           </>}
