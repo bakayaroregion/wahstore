@@ -6,7 +6,7 @@ import { Icon, catIcon } from '../ui'
 
 const SEL = 'id,name,slug,sku,short_description,description,price,compare_at_price,labels,category_id,logo_url,categories(name)'
 interface Review { id: string; avatar_url: string | null; name: string; product_label: string | null; rating: number; body: string }
-interface Stats { orders_completed: number; rating_avg: number | null; rating_count: number }
+interface Stats { orders_completed: number; customers: number; repeat_pct: number | null; rating_avg: number | null; rating_count: number }
 interface Cat { id: string; name: string; image_url: string | null }
 const DEFAULT_HL = ['Harga tampil jelas sebelum pesanan dibuat', 'Setiap pesanan punya nomor dan kode akses untuk cek status', 'Konfirmasi dan pembayaran langsung lewat WhatsApp', 'Pembayaran diverifikasi admin sebelum pesanan diproses', 'Riwayat status pesanan tercatat']
 
@@ -95,11 +95,13 @@ export default function Store() {
         <div className="checks">{highlights.map((c) => <div className="chk2" key={c}><span className="ic xs"><Icon n="check" size={14} /></span>{c}</div>)}</div>
       </section>
 
-      {(reviews.length > 0 || (stats && stats.orders_completed > 0)) && (
+      {(reviews.length > 0 || (stats && stats.customers > 0)) && (
         <section className="sec">
-          <div className="c"><span className="badge"><Icon n="chat" size={14} /> Testimoni Pelanggan</span></div>
-          <h2 className="h2c">Apa Kata <span className="g">Mereka?</span></h2>
-          <p className="sub">Ulasan dari pelanggan kami</p>
+          {reviews.length > 0 && <>
+            <div className="c"><span className="badge"><Icon n="chat" size={14} /> Testimoni Pelanggan</span></div>
+            <h2 className="h2c">Apa Kata <span className="g">Mereka?</span></h2>
+            <p className="sub">Ulasan dari pelanggan kami</p>
+          </>}
           {reviews.length > 0 && (
             <>
               <div className="row c">
@@ -122,8 +124,9 @@ export default function Store() {
             </>
           )}
           <div className="stats3">
-            {stats && stats.orders_completed > 0 && <div><b className="g n">{stats.orders_completed}</b><span>Pesanan selesai</span></div>}
-            {stats && stats.rating_count > 0 && stats.rating_avg != null && <div><b className="g n">{stats.rating_avg}</b><span>Rating rata-rata ({stats.rating_count} ulasan)</span></div>}
+            {stats && stats.customers > 0 && <div><b className="g n">{stats.customers}</b><span>Pelanggan Bertransaksi</span></div>}
+            {stats && stats.rating_count > 0 && stats.rating_avg != null && <div><b className="g n">{stats.rating_avg}</b><span>Rating Rata-rata ({stats.rating_count} ulasan)</span></div>}
+            {stats && stats.customers >= 10 && stats.repeat_pct != null && <div><b className="g n">{stats.repeat_pct}%</b><span>Repeat Order</span></div>}
           </div>
         </section>
       )}
