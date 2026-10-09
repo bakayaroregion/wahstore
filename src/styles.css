@@ -115,3 +115,11 @@ img.av{object-fit:cover;flex:none}
 .bar nav a:not(.btn){transition:transform .18s ease;display:inline-block}.bar nav a:not(.btn):hover{transform:scale(1.06)}
 @media(prefers-reduced-motion:reduce){.btn,.chip,.cat,.linkbtn,.bar nav a{transition:none}.btn:hover,.chip:hover,.cat:hover,.linkbtn:hover,.bar nav a:hover{transform:none}}
 .stats3{gap:72px}
+/* Tombol besar CTA: melayang, berdenyut, kilau, panah bergerak */
+.cta-btn{position:relative;overflow:hidden;animation:ctaFloat 2.6s ease-in-out infinite}
+.cta-btn::after{content:"";position:absolute;top:0;left:-70%;width:45%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.35),transparent);transform:skewX(-20deg);animation:ctaShine 3.2s ease-in-out infinite}
+.cta-btn svg{animation:ctaArrow 1.2s ease-in-out infinite}
+@keyframes ctaFloat{0%,100%{translate:0 0;box-shadow:0 6px 22px rgba(124,58,237,.35)}50%{translate:0 -6px;box-shadow:0 12px 30px rgba(14,165,233,.45)}}
+@keyframes ctaShine{0%,55%{left:-70%}100%{left:130%}}
+@keyframes ctaArrow{0%,100%{transform:translateX(0)}50%{transform:translateX(5px)}}
+@media(prefers-reduced-motion:reduce){.cta-btn,.cta-btn::after,.cta-btn svg{animation:none}}

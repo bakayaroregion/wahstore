@@ -133,7 +133,7 @@ export default function Store() {
 
       <section className="cta">
         <h2>Siap Memesan?</h2><p>Daftar, pilih produk, dan selesaikan lewat WhatsApp.</p>
-        {session ? <Link className="btn lg" to="/produk">Mulai Sekarang <Icon n="arrow" size={16} /></Link> : <Link className="btn lg" to="/daftar">Daftar Gratis <Icon n="arrow" size={16} /></Link>}
+        {session ? <Link className="btn lg cta-btn" to="/produk">Mulai Sekarang <Icon n="arrow" size={16} /></Link> : <Link className="btn lg cta-btn" to="/daftar">Daftar Gratis <Icon n="arrow" size={16} /></Link>}
       </section>
 
       <section className="about">
