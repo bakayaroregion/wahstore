@@ -385,13 +385,19 @@ function ShopSettings() {
   const [tagline, setTagline] = useState('')
   const [logo, setLogo] = useState('')
   const [tiers, setTiers] = useState('')
+  const [sc, setSc] = useState('')
+  const [sr, setSr] = useState('')
+  const [sp, setSp] = useState('')
   const [msg, setMsg] = useState('')
   useEffect(() => {
-    supabase.from('store_settings').select('key,value').in('key', ['brand_name', 'brand_tagline', 'brand_logo_url', 'loyalty_tiers']).then(({ data }) => {
+    supabase.from('store_settings').select('key,value').in('key', ['brand_name', 'brand_tagline', 'brand_logo_url', 'loyalty_tiers', 'stat_customers', 'stat_rating', 'stat_repeat']).then(({ data }) => {
       ;(data ?? []).forEach((r) => {
         if (r.key === 'brand_name') setName(String(r.value ?? ''))
         if (r.key === 'brand_tagline') setTagline(String(r.value ?? ''))
         if (r.key === 'brand_logo_url') setLogo(String(r.value ?? ''))
+        if (r.key === 'stat_customers') setSc(String(r.value ?? ''))
+        if (r.key === 'stat_rating') setSr(String(r.value ?? ''))
+        if (r.key === 'stat_repeat') setSp(String(r.value ?? ''))
         if (r.key === 'loyalty_tiers' && Array.isArray(r.value)) setTiers((r.value as { months: number; percent: number }[]).map((t) => `${t.months}:${t.percent}`).join('\n'))
       })
     })
@@ -409,6 +415,9 @@ function ShopSettings() {
       { key: 'brand_tagline', value: tagline.trim(), is_public: true },
       { key: 'brand_logo_url', value: logo, is_public: true },
       { key: 'loyalty_tiers', value: parsed, is_public: true },
+      { key: 'stat_customers', value: sc.trim().slice(0, 12), is_public: true },
+      { key: 'stat_rating', value: sr.trim().slice(0, 12), is_public: true },
+      { key: 'stat_repeat', value: sp.trim().slice(0, 12), is_public: true },
     ], { onConflict: 'key' })
     setMsg(error ? 'Gagal menyimpan: ' + error.message : 'Tersimpan. Muat ulang toko untuk melihat perubahan.')
   }
@@ -421,6 +430,11 @@ function ShopSettings() {
       <label>Tingkat diskon loyalitas (satu per baris, format bulan:persen)
         <textarea rows={4} value={tiers} onChange={(e) => setTiers(e.target.value)} placeholder={'2:3\n3:5\n6:10'} /></label>
       <p className="muted">Contoh 3:5 artinya pelanggan yang punya pesanan selesai 3 bulan berturut-turut (sampai bulan lalu) mendapat diskon 5% pada pesanan berikutnya. Isi sesuai kemampuan Anda, diskon dihitung otomatis oleh server.</p>
+      <h3>Angka di beranda (opsional)</h3>
+      <label>Pelanggan puas (mis. 120+)<input value={sc} maxLength={12} onChange={(e) => setSc(e.target.value)} /></label>
+      <label>Rating rata-rata (mis. 4.9)<input value={sr} maxLength={12} onChange={(e) => setSr(e.target.value)} /></label>
+      <label>Repeat order (mis. 80%)<input value={sp} maxLength={12} onChange={(e) => setSp(e.target.value)} /></label>
+      <p className="muted">Kosongkan kolom agar angka dihitung otomatis dari data toko. Isi hanya dengan angka yang benar sesuai kondisi toko Anda, karena pembeli membacanya sebagai fakta.</p>
       {msg && <p role="status">{msg}</p>}
       <button className="btn">Simpan</button>
     </form>

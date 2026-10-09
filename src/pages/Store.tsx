@@ -37,13 +37,17 @@ export default function Store() {
   const [reviews, setReviews] = useState<Review[]>([])
   const [stats, setStats] = useState<Stats | null>(null)
   const rail = useRef<HTMLDivElement>(null)
+  const [manual, setManual] = useState<{ c: string; r: string; p: string }>({ c: '', r: '', p: '' })
 
   useEffect(() => {
     supabase.from('categories').select('id,name,image_url').order('sort_order').then(({ data }) => setCats((data ?? []) as Cat[]))
-    supabase.from('store_settings').select('key,value').in('key', ['whatsapp_number', 'operating_hours', 'highlights']).then(({ data }) => {
+    supabase.from('store_settings').select('key,value').in('key', ['whatsapp_number', 'operating_hours', 'highlights', 'stat_customers', 'stat_rating', 'stat_repeat']).then(({ data }) => {
       ;(data ?? []).forEach((r) => {
         if (r.key === 'whatsapp_number') { const n = String(r.value ?? '').replace(/\D/g, ''); if (/^\d{8,15}$/.test(n)) setWa(n) }
         if (r.key === 'operating_hours' && r.value) setHours(String(r.value))
+        if (r.key === 'stat_customers') setManual((m) => ({ ...m, c: String(r.value ?? '').trim() }))
+        if (r.key === 'stat_rating') setManual((m) => ({ ...m, r: String(r.value ?? '').trim() }))
+        if (r.key === 'stat_repeat') setManual((m) => ({ ...m, p: String(r.value ?? '').trim() }))
         if (r.key === 'highlights' && Array.isArray(r.value) && r.value.length) setHighlights((r.value as unknown[]).map(String))
       })
     })
@@ -95,7 +99,7 @@ export default function Store() {
         <div className="checks">{highlights.map((c) => <div className="chk2" key={c}><span className="ic xs"><Icon n="check" size={14} /></span>{c}</div>)}</div>
       </section>
 
-      {(reviews.length > 0 || (stats && stats.customers > 0)) && (
+      {(reviews.length > 0 || (stats && stats.customers > 0) || manual.c || manual.r || manual.p) && (
         <section className="sec">
           {reviews.length > 0 && <>
             <div className="c"><span className="badge live"><Icon n="chat" size={14} /> Testimoni Pelanggan</span></div>
@@ -124,9 +128,12 @@ export default function Store() {
             </>
           )}
           <div className="stats3">
-            {stats && stats.customers > 0 && <div><b className="g n">{stats.customers}</b><span>Pelanggan Bertransaksi</span></div>}
-            {stats && stats.rating_count > 0 && stats.rating_avg != null && <div><b className="g n">{stats.rating_avg}</b><span>Rating Rata-rata ({stats.rating_count} ulasan)</span></div>}
-            {stats && stats.customers >= 10 && stats.repeat_pct != null && <div><b className="g n">{stats.repeat_pct}%</b><span>Repeat Order</span></div>}
+            {manual.c ? <div><b className="g n">{manual.c}</b><span>Pelanggan Puas</span></div>
+              : stats && stats.customers > 0 && <div><b className="g n">{stats.customers}</b><span>Pelanggan Bertransaksi</span></div>}
+            {manual.r ? <div><b className="g n">{manual.r}</b><span>Rating Rata-rata</span></div>
+              : stats && stats.rating_count > 0 && stats.rating_avg != null && <div><b className="g n">{stats.rating_avg}</b><span>Rating Rata-rata ({stats.rating_count} ulasan)</span></div>}
+            {manual.p ? <div><b className="g n">{manual.p}</b><span>Repeat Order</span></div>
+              : stats && stats.customers >= 10 && stats.repeat_pct != null && <div><b className="g n">{stats.repeat_pct}%</b><span>Repeat Order</span></div>}
           </div>
         </section>
       )}
