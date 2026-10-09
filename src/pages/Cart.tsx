@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../supabase'
-import { cartApi, read, rupiah, STATUS, useCart, write } from '../lib'
+import { cartApi, read, rupiah, STATUS, useCart, useSession, write } from '../lib'
 
 interface Done { order_number: string; access_token: string; grand_total: number; wa_url: string | null; warning: string | null }
 interface Saved { order_number: string; token: string }
@@ -12,7 +12,15 @@ async function errMsg(error: unknown, fallback: string) {
 
 export function Cart() {
   const cart = useCart()
-  const [f, setF] = useState({ name: '', phone: '', email: '', note: '', coupon: '', agree: false })
+  const session = useSession()
+  const [loy, setLoy] = useState(0)
+  const [f, setF] = useState({ name: '', phone: '', note: '', coupon: '', agree: false })
+  useEffect(() => {
+    if (!session) return
+    const m = session.user.user_metadata ?? {}
+    setF((x) => ({ ...x, name: x.name || String(m.full_name ?? ''), phone: x.phone || String(m.phone ?? '') }))
+    supabase.rpc('my_loyalty').then(({ data }) => setLoy(Number(data?.percent ?? 0)))
+  }, [session])
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
   const [done, setDone] = useState<Done | null>(null)
@@ -24,7 +32,7 @@ export function Cart() {
     if (!f.agree) { setErr('Setujui syarat transaksi terlebih dahulu.'); return }
     setBusy(true)
     const { data, error } = await supabase.functions.invoke('create-order', {
-      body: { name: f.name, phone: f.phone, email: f.email, note: f.note, coupon: f.coupon, items: cart.map((i) => ({ product_id: i.product_id, quantity: i.qty })) },
+      body: { name: f.name, phone: f.phone, note: f.note, coupon: f.coupon, items: cart.map((i) => ({ product_id: i.product_id, quantity: i.qty })) },
     })
     setBusy(false)
     if (error || !data?.order_number) { setErr(await errMsg(error, 'Pesanan gagal dibuat. Coba lagi.')); return }
@@ -49,6 +57,9 @@ export function Cart() {
     </section>
   )
 
+  if (session === undefined) return <p className="muted">Memuat...</p>
+  if (!session) return <section className="box"><h1>Masuk dulu</h1><p>Untuk berbelanja, Anda perlu akun dengan email yang terdaftar.</p><div className="row"><Link className="btn" to="/masuk">Masuk</Link><Link className="btn ghost" to="/daftar">Daftar</Link></div></section>
+
   if (cart.length === 0) return <section className="box"><h1>Keranjang kosong</h1><p>Pilih produk dulu. <Link to="/">Lihat produk</Link></p></section>
 
   return (
@@ -66,13 +77,14 @@ export function Cart() {
           </div>
         ))}
         <p className="total">Subtotal perkiraan: {rupiah(sub)}</p>
+        {loy > 0 && <p className="ok">Diskon pelanggan setia {loy}%: perkiraan hemat {rupiah(Math.floor(sub * loy / 100))}</p>}
         <p className="muted">Total final, diskon kupon, dan stok dihitung server saat pesanan dibuat.</p>
       </section>
       <form className="box" onSubmit={submit}>
         <h2>Data pembeli</h2>
         <label>Nama<input required minLength={2} maxLength={80} value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></label>
         <label>Nomor WhatsApp<input required inputMode="tel" placeholder="08xxxxxxxxxx" value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} /></label>
-        <label>Email (opsional)<input type="email" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></label>
+        <p className="muted">Pesanan atas akun {session?.user.email}</p>
         <label>Kode kupon (opsional)<input value={f.coupon} onChange={(e) => setF({ ...f, coupon: e.target.value })} /></label>
         <label>Catatan<input maxLength={500} value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} /></label>
         <label className="chk"><input type="checkbox" checked={f.agree} onChange={(e) => setF({ ...f, agree: e.target.checked })} />Saya setuju dengan syarat transaksi toko.</label>

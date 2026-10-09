@@ -17,7 +17,7 @@ const mask = (p: string) => p.length > 6 ? p.slice(0, 4) + '****' + p.slice(-2) 
 export default function Admin() {
   const [sess, setSess] = useState<Session | null | undefined>(undefined)
   const [roles, setRoles] = useState<string[] | null>(null)
-  const [tab, setTab] = useState<'dash' | 'orders' | 'products' | 'content'>('dash')
+  const [tab, setTab] = useState<'dash' | 'orders' | 'products' | 'categories' | 'content'>('dash')
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSess(data.session))
     const { data } = supabase.auth.onAuthStateChange((_e, s) => setSess(s))
@@ -42,11 +42,13 @@ export default function Admin() {
         <button className="chip" aria-pressed={tab === 'dash'} onClick={() => setTab('dash')}>Dashboard</button>
         <button className="chip" aria-pressed={tab === 'orders'} onClick={() => setTab('orders')}>Pesanan</button>
         {manage && <button className="chip" aria-pressed={tab === 'products'} onClick={() => setTab('products')}>Produk</button>}
+        {manage && <button className="chip" aria-pressed={tab === 'categories'} onClick={() => setTab('categories')}>Kategori</button>}
         {manage && <button className="chip" aria-pressed={tab === 'content'} onClick={() => setTab('content')}>Konten</button>}
       </nav>
       {tab === 'dash' && <Orders ops={ops} summaryOnly />}
       {tab === 'orders' && <Orders ops={ops} />}
       {tab === 'products' && manage && <Products />}
+      {tab === 'categories' && manage && <Categories />}
       {tab === 'content' && manage && <Content />}
     </div>
   )
@@ -174,7 +176,7 @@ function Products() {
           <label>Harga coret (Rp)<input type="number" min={0} value={f.compare_at_price ?? ''} onChange={(e) => set('compare_at_price', e.target.value ? Number(e.target.value) : null)} /></label>
           <label>Pemenuhan<select value={f.fulfillment_mode} onChange={(e) => set('fulfillment_mode', e.target.value)}><option value="MANUAL">Manual</option><option value="DIGITAL_STOCK">Stok digital</option></select></label>
           <label>Label (pisahkan koma)<input value={f.labels} onChange={(e) => set('labels', e.target.value)} placeholder="POPULER, NEW" /></label>
-          <label className="wide">URL logo atau gambar (opsional, https). Pakai logo yang Anda berhak menggunakannya.<input value={f.logo_url} onChange={(e) => set('logo_url', e.target.value)} placeholder="https://..." /></label>
+          <div className="wide"><PhotoField label="Foto produk" value={f.logo_url} onChange={(u) => set('logo_url', u)} folder="products" /></div>
           <label className="wide">Deskripsi singkat<input value={f.short_description} onChange={(e) => set('short_description', e.target.value)} /></label>
           <label className="wide">Deskripsi<textarea rows={4} value={f.description} onChange={(e) => set('description', e.target.value)} /></label>
           <label className="chk"><input type="checkbox" checked={f.is_active} onChange={(e) => set('is_active', e.target.checked)} />Tampilkan di toko</label>
@@ -186,7 +188,7 @@ function Products() {
         <thead><tr><th>Produk</th><th>SKU</th><th>Harga</th><th>Status</th><th></th></tr></thead>
         <tbody>
           {(rows ?? []).map((p) => (
-            <tr key={p.id}><td>{p.name}</td><td>{p.sku}</td><td>{rupiah(p.price)}</td><td>{p.is_active ? 'Tampil' : 'Disembunyikan'}</td>
+            <tr key={p.id}><td><div className="row">{p.logo_url && <img className="thumb" src={p.logo_url} alt="" />}{p.name}</div></td><td>{p.sku}</td><td>{rupiah(p.price)}</td><td>{p.is_active ? 'Tampil' : 'Disembunyikan'}</td>
               <td><div className="acts"><button className="btn ghost sm" onClick={() => setF(p)}>Ubah</button><button className="btn bad sm" onClick={() => del(p.id)}>Hapus</button></div></td></tr>
           ))}
           {rows && rows.length === 0 && <tr><td colSpan={5} className="muted">Belum ada produk. Tekan Tambah produk.</td></tr>}
@@ -241,6 +243,7 @@ function Content() {
 
   return (
     <>
+      <ShopSettings />
       <form className="box" onSubmit={saveSettings}>
         <h2>Jam operasional dan keunggulan</h2>
         <label>Jam operasional<input value={hours} onChange={(e) => setHours(e.target.value)} placeholder="Setiap hari, 24 jam" /></label>
@@ -276,5 +279,142 @@ function Content() {
         </tbody>
       </table></div>
     </>
+  )
+}
+
+async function uploadImage(file: File, folder: string): Promise<string> {
+  if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) throw new Error('Format harus PNG, JPG, atau WebP.')
+  if (file.size > 2 * 1024 * 1024) throw new Error('Ukuran maksimal 2 MB.')
+  const ext = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg'
+  const path = `${folder}/${crypto.randomUUID()}.${ext}`
+  const { error } = await supabase.storage.from('media').upload(path, file, { contentType: file.type, cacheControl: '31536000' })
+  if (error) throw new Error(error.message)
+  return supabase.storage.from('media').getPublicUrl(path).data.publicUrl
+}
+
+function PhotoField({ label, value, onChange, folder }: { label: string; value: string; onChange: (u: string) => void; folder: string }) {
+  const [err, setErr] = useState('')
+  const [busy, setBusy] = useState(false)
+  async function pick(file?: File) {
+    if (!file) return
+    setErr(''); setBusy(true)
+    try { onChange(await uploadImage(file, folder)) } catch (e) { setErr((e as Error).message) }
+    setBusy(false)
+  }
+  return (
+    <div className="photo">
+      <span className="lbl">{label}</span>
+      <div className="row">
+        {value ? <img className="thumb lg" src={value} alt="Pratinjau" /> : <span className="thumb lg empty">Belum ada</span>}
+        <div>
+          <input type="file" accept="image/png,image/jpeg,image/webp" disabled={busy} onChange={(e) => pick(e.target.files?.[0])} aria-label={label} />
+          <div className="muted">PNG, JPG, atau WebP, maks. 2 MB.{busy && ' Mengunggah...'}</div>
+          {value && <button type="button" className="btn ghost sm" onClick={() => onChange('')}>Hapus foto</button>}
+        </div>
+      </div>
+      {err && <p className="err" role="alert">{err}</p>}
+    </div>
+  )
+}
+
+interface CatRow { id?: string; name: string; slug: string; description: string; image_url: string; sort_order: number; is_active: boolean }
+const blankCat: CatRow = { name: '', slug: '', description: '', image_url: '', sort_order: 0, is_active: true }
+
+function Categories() {
+  const [rows, setRows] = useState<(CatRow & { id: string })[] | null>(null)
+  const [f, setF] = useState<CatRow | null>(null)
+  const [err, setErr] = useState('')
+  const load = useCallback(() => {
+    supabase.from('categories').select('*').order('sort_order').then(({ data }) =>
+      setRows((data ?? []).map((c) => ({ ...c, description: c.description ?? '', image_url: c.image_url ?? '' })) as (CatRow & { id: string })[]))
+  }, [])
+  useEffect(load, [load])
+  async function save(e: FormEvent) {
+    e.preventDefault(); if (!f) return; setErr('')
+    const { id, ...rest } = f
+    const body = { ...rest, slug: f.slug || slugify(f.name), description: f.description || null, image_url: f.image_url || null }
+    const { error } = id ? await supabase.from('categories').update(body).eq('id', id) : await supabase.from('categories').insert(body)
+    if (error) { setErr('Gagal menyimpan: ' + error.message); return }
+    setF(null); load()
+  }
+  async function del(id: string) {
+    if (!window.confirm('Hapus kategori ini?')) return
+    const { error } = await supabase.from('categories').delete().eq('id', id)
+    if (error) window.alert('Tidak bisa dihapus (mungkin masih dipakai produk): ' + error.message); else load()
+  }
+  const set = (k: keyof CatRow, v: unknown) => setF((x) => (x ? { ...x, [k]: v } : x))
+  return (
+    <>
+      <button className="btn" onClick={() => setF(blankCat)}>Tambah kategori</button>
+      {f && (
+        <form className="box formgrid" onSubmit={save}>
+          <label>Nama<input required value={f.name} onChange={(e) => set('name', e.target.value)} /></label>
+          <label>Slug (kosong = otomatis)<input value={f.slug} onChange={(e) => set('slug', e.target.value)} /></label>
+          <label>Urutan<input type="number" value={f.sort_order} onChange={(e) => set('sort_order', Number(e.target.value))} /></label>
+          <label className="chk"><input type="checkbox" checked={f.is_active} onChange={(e) => set('is_active', e.target.checked)} />Tampilkan di toko</label>
+          <label className="wide">Deskripsi<input value={f.description} onChange={(e) => set('description', e.target.value)} /></label>
+          <div className="wide"><PhotoField label="Foto kategori" value={f.image_url} onChange={(u) => set('image_url', u)} folder="categories" /></div>
+          {err && <p className="err wide" role="alert">{err}</p>}
+          <div className="row wide"><button className="btn">Simpan</button><button type="button" className="btn ghost" onClick={() => setF(null)}>Batal</button></div>
+        </form>
+      )}
+      <div className="tw"><table>
+        <thead><tr><th>Kategori</th><th>Urutan</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          {(rows ?? []).map((c) => (
+            <tr key={c.id}><td><div className="row">{c.image_url && <img className="thumb" src={c.image_url} alt="" />}{c.name}</div></td><td>{c.sort_order}</td><td>{c.is_active ? 'Tampil' : 'Disembunyikan'}</td>
+              <td><div className="acts"><button className="btn ghost sm" onClick={() => setF(c)}>Ubah</button><button className="btn bad sm" onClick={() => del(c.id)}>Hapus</button></div></td></tr>
+          ))}
+          {rows && rows.length === 0 && <tr><td colSpan={4} className="muted">Belum ada kategori.</td></tr>}
+        </tbody>
+      </table></div>
+    </>
+  )
+}
+
+function ShopSettings() {
+  const [name, setName] = useState('')
+  const [tagline, setTagline] = useState('')
+  const [logo, setLogo] = useState('')
+  const [tiers, setTiers] = useState('')
+  const [msg, setMsg] = useState('')
+  useEffect(() => {
+    supabase.from('store_settings').select('key,value').in('key', ['brand_name', 'brand_tagline', 'brand_logo_url', 'loyalty_tiers']).then(({ data }) => {
+      ;(data ?? []).forEach((r) => {
+        if (r.key === 'brand_name') setName(String(r.value ?? ''))
+        if (r.key === 'brand_tagline') setTagline(String(r.value ?? ''))
+        if (r.key === 'brand_logo_url') setLogo(String(r.value ?? ''))
+        if (r.key === 'loyalty_tiers' && Array.isArray(r.value)) setTiers((r.value as { months: number; percent: number }[]).map((t) => `${t.months}:${t.percent}`).join('\n'))
+      })
+    })
+  }, [])
+  async function save(e: FormEvent) {
+    e.preventDefault(); setMsg('')
+    const parsed: { months: number; percent: number }[] = []
+    for (const line of tiers.split('\n').map((l) => l.trim()).filter(Boolean)) {
+      const m = /^(\d{1,2})\s*:\s*(\d{1,2})$/.exec(line)
+      if (!m || Number(m[1]) < 1 || Number(m[2]) < 1 || Number(m[2]) > 50) { setMsg(`Format salah pada "${line}". Tulis bulan:persen, mis. 3:5 (persen 1 sampai 50).`); return }
+      parsed.push({ months: Number(m[1]), percent: Number(m[2]) })
+    }
+    const { error } = await supabase.from('store_settings').upsert([
+      { key: 'brand_name', value: name.trim() || 'WAHYU STORE', is_public: true },
+      { key: 'brand_tagline', value: tagline.trim(), is_public: true },
+      { key: 'brand_logo_url', value: logo, is_public: true },
+      { key: 'loyalty_tiers', value: parsed, is_public: true },
+    ], { onConflict: 'key' })
+    setMsg(error ? 'Gagal menyimpan: ' + error.message : 'Tersimpan. Muat ulang toko untuk melihat perubahan.')
+  }
+  return (
+    <form className="box" onSubmit={save}>
+      <h2>Brand dan diskon loyalitas</h2>
+      <label>Nama brand<input value={name} maxLength={40} onChange={(e) => setName(e.target.value)} /></label>
+      <label>Slogan singkat<input value={tagline} maxLength={60} onChange={(e) => setTagline(e.target.value)} /></label>
+      <PhotoField label="Logo brand (persegi, tampil di header)" value={logo} onChange={setLogo} folder="brand" />
+      <label>Tingkat diskon loyalitas (satu per baris, format bulan:persen)
+        <textarea rows={4} value={tiers} onChange={(e) => setTiers(e.target.value)} placeholder={'2:3\n3:5\n6:10'} /></label>
+      <p className="muted">Contoh 3:5 artinya pelanggan yang punya pesanan selesai 3 bulan berturut-turut (sampai bulan lalu) mendapat diskon 5% pada pesanan berikutnya. Isi sesuai kemampuan Anda, diskon dihitung otomatis oleh server.</p>
+      {msg && <p role="status">{msg}</p>}
+      <button className="btn">Simpan</button>
+    </form>
   )
 }

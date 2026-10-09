@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { supabase } from '../supabase'
-import { cartApi, Product, rupiah } from '../lib'
+import { cartApi, Product, rupiah, useSession } from '../lib'
 import { Icon, catIcon } from '../ui'
 
 const SEL = 'id,name,slug,sku,short_description,description,price,compare_at_price,labels,category_id,logo_url,categories(name)'
-
 interface Review { id: string; name: string; product_label: string | null; rating: number; body: string }
 interface Stats { orders_completed: number; rating_avg: number | null; rating_count: number }
+interface Cat { id: string; name: string; image_url: string | null }
 const DEFAULT_HL = ['Harga tampil jelas sebelum pesanan dibuat', 'Setiap pesanan punya nomor dan kode akses untuk cek status', 'Konfirmasi dan pembayaran langsung lewat WhatsApp', 'Pembayaran diverifikasi admin sebelum pesanan diproses', 'Riwayat status pesanan tercatat']
 
 function Thumb({ p, big }: { p: Product; big?: boolean }) {
@@ -15,14 +15,23 @@ function Thumb({ p, big }: { p: Product; big?: boolean }) {
   if (p.logo_url && !bad) return <div className={'ph logo' + (big ? ' big' : '')}><img src={p.logo_url} alt={p.name} loading="lazy" onError={() => setBad(true)} /></div>
   return <div className={'ph' + (big ? ' big' : '')} aria-hidden="true">{p.name[0]}</div>
 }
-
 function Price({ p }: { p: Product }) {
   return <div className="price">{rupiah(p.price)}{p.compare_at_price && p.compare_at_price > p.price && <s>{rupiah(p.compare_at_price)}</s>}</div>
 }
+function Gate() {
+  return (
+    <div className="callout">
+      <Icon n="shield" size={18} /> Masuk atau daftar untuk melihat semua produk dan harga
+      <Link className="btn" to="/daftar">Daftar Gratis <Icon n="arrow" size={16} /></Link>
+      <Link className="btn ghost" to="/masuk">Masuk</Link>
+    </div>
+  )
+}
 
 export default function Store() {
+  const session = useSession()
   const [list, setList] = useState<Product[] | null>(null)
-  const [cats, setCats] = useState<{ id: string; name: string }[]>([])
+  const [cats, setCats] = useState<Cat[]>([])
   const [q, setQ] = useState('')
   const [cat, setCat] = useState('')
   const [err, setErr] = useState('')
@@ -32,11 +41,9 @@ export default function Store() {
   const [reviews, setReviews] = useState<Review[]>([])
   const [stats, setStats] = useState<Stats | null>(null)
   const rail = useRef<HTMLDivElement>(null)
+
   useEffect(() => {
-    supabase.from('products').select(SEL).order('created_at', { ascending: false }).then(({ data, error }) => {
-      if (error) setErr('Produk gagal dimuat. Muat ulang halaman.'); else setList(data as unknown as Product[])
-    })
-    supabase.from('categories').select('id,name').order('sort_order').then(({ data }) => setCats(data ?? []))
+    supabase.from('categories').select('id,name,image_url').order('sort_order').then(({ data }) => setCats((data ?? []) as Cat[]))
     supabase.from('store_settings').select('key,value').in('key', ['whatsapp_number', 'operating_hours', 'highlights']).then(({ data }) => {
       ;(data ?? []).forEach((r) => {
         if (r.key === 'whatsapp_number') { const n = String(r.value ?? '').replace(/\D/g, ''); if (/^\d{8,15}$/.test(n)) setWa(n) }
@@ -47,6 +54,14 @@ export default function Store() {
     supabase.from('testimonials').select('id,name,product_label,rating,body').eq('is_published', true).order('sort_order').then(({ data }) => setReviews((data ?? []) as Review[]))
     supabase.rpc('public_stats').then(({ data }) => { if (data) setStats(data as Stats) })
   }, [])
+  // Produk dan harga hanya dimuat setelah masuk (RLS juga menolak pengunjung tanpa akun)
+  useEffect(() => {
+    if (!session) { setList(null); return }
+    supabase.from('products').select(SEL).order('created_at', { ascending: false }).then(({ data, error }) => {
+      if (error) setErr('Produk gagal dimuat. Muat ulang halaman.'); else setList(data as unknown as Product[])
+    })
+  }, [session])
+
   const counts = useMemo(() => {
     const m: Record<string, number> = {}
     ;(list ?? []).forEach((p) => { if (p.category_id) m[p.category_id] = (m[p.category_id] ?? 0) + 1 })
@@ -55,15 +70,18 @@ export default function Store() {
   const go = () => document.getElementById('produk')?.scrollIntoView({ behavior: 'smooth' })
   const pick = (id: string) => { setCat(id); go() }
   const shown = (list ?? []).filter((p) => (!cat || p.category_id === cat) && p.name.toLowerCase().includes(q.toLowerCase()))
-  const checks = highlights
+  const start = session
+    ? <button className="btn lg" onClick={go}>Lihat Produk <Icon n="arrow" size={16} /></button>
+    : <Link className="btn lg" to="/daftar">Daftar Sekarang <Icon n="arrow" size={16} /></Link>
+
   return (
     <>
       <section className="hero">
-        <span className="badge"><Icon n="spark" size={14} /> Toko produk digital</span>
+        <span className="badge"><Icon n="spark" size={14} /> Diskon untuk pelanggan setia tiap bulan</span>
         <h1>Belanja <span className="g">Produk Digital</span><br />Jadi Lebih Mudah</h1>
-        <p>Pilih produk, buat pesanan, lalu lanjutkan ke WhatsApp untuk pembayaran dan konfirmasi dengan admin.</p>
+        <p>Daftar dengan email, pilih produk, lalu lanjutkan ke WhatsApp untuk pembayaran. Belanja rutin tiap bulan, diskonnya naik.</p>
         <div className="row c">
-          <button className="btn lg" onClick={go}>Lihat Produk <Icon n="arrow" size={16} /></button>
+          {start}
           {wa && <a className="btn ghost lg" href={`https://wa.me/${wa}`} target="_blank" rel="noopener noreferrer">Hubungi Admin</a>}
         </div>
       </section>
@@ -71,7 +89,7 @@ export default function Store() {
       <section className="feat">
         {[['shield', 'Pesanan Tercatat', 'Setiap pesanan punya nomor unik dan bisa dicek statusnya kapan saja.'],
           ['zap', 'Konfirmasi via WhatsApp', 'Setelah pesan, lanjut ke WhatsApp untuk petunjuk pembayaran.'],
-          ['star', 'Harga Transparan', 'Total dihitung server dan terlihat sebelum Anda membayar.']].map(([i, t, d]) => (
+          ['star', 'Diskon Pelanggan Setia', 'Belanja tiap bulan dan dapatkan diskon yang makin besar.']].map(([i, t, d]) => (
           <div className="fcard" key={t}><span className="ic"><Icon n={i as 'shield'} size={22} /></span><h3>{t}</h3><p>{d}</p></div>
         ))}
       </section>
@@ -82,42 +100,49 @@ export default function Store() {
         <div className="cats">
           {cats.map((c) => (
             <button className="cat" key={c.id} onClick={() => pick(c.id)}>
-              <span className="ic sm"><Icon n={catIcon(c.name)} /></span><b>{c.name}</b><span className="muted">{counts[c.id] ?? 0} produk</span>
+              {c.image_url ? <img src={c.image_url} alt="" loading="lazy" /> : <span className="ic sm"><Icon n={catIcon(c.name)} /></span>}
+              <b>{c.name}</b>{list && <span className="muted">{counts[c.id] ?? 0} produk</span>}
             </button>
           ))}
         </div>
-        <div className="callout"><Icon n="shield" size={18} /> Semua produk dan harga ada di bawah <button className="btn" onClick={go}>Lihat Produk <Icon n="arrow" size={16} /></button></div>
+        {session === null && <Gate />}
       </section>
 
       <section className="sec" id="produk">
         <h2 className="h2c">Semua <span className="g">Produk</span></h2>
-        <div className="tools">
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Cari produk" aria-label="Cari produk" />
-          <div className="chips">
-            <button className="chip" aria-pressed={!cat} onClick={() => setCat('')}>Semua</button>
-            {cats.map((c) => <button key={c.id} className="chip" aria-pressed={cat === c.id} onClick={() => setCat(c.id)}>{c.name}</button>)}
-          </div>
-        </div>
-        {err && <p className="err">{err}</p>}
-        {!list && !err && <p className="muted">Memuat produk...</p>}
-        {list && shown.length === 0 && <p className="muted">Belum ada produk yang cocok. Coba kata kunci atau kategori lain.</p>}
-        <div className="grid">
-          {shown.map((p) => (
-            <article className="card" key={p.id}>
-              <Thumb p={p} />
-              <div className="tags">{p.labels?.map((l) => <span className="tag" key={l}>{l}</span>)}</div>
-              <h3><Link to={`/produk/${p.slug}`}>{p.name}</Link></h3>
-              <div className="muted">{p.categories?.name}</div>
-              <Price p={p} />
-              <div className="row"><Link className="btn ghost sm" to={`/produk/${p.slug}`}>Detail</Link><button className="btn sm" onClick={() => cartApi.add(p)}>Beli</button></div>
-            </article>
-          ))}
-        </div>
+        {session === null && <Gate />}
+        {session === undefined && <p className="muted c">Memuat...</p>}
+        {session && (
+          <>
+            <div className="tools">
+              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Cari produk" aria-label="Cari produk" />
+              <div className="chips">
+                <button className="chip" aria-pressed={!cat} onClick={() => setCat('')}>Semua</button>
+                {cats.map((c) => <button key={c.id} className="chip" aria-pressed={cat === c.id} onClick={() => setCat(c.id)}>{c.name}</button>)}
+              </div>
+            </div>
+            {err && <p className="err">{err}</p>}
+            {!list && !err && <p className="muted">Memuat produk...</p>}
+            {list && shown.length === 0 && <p className="muted">Belum ada produk yang cocok. Coba kata kunci atau kategori lain.</p>}
+            <div className="grid">
+              {shown.map((p) => (
+                <article className="card" key={p.id}>
+                  <Thumb p={p} />
+                  <div className="tags">{p.labels?.map((l) => <span className="tag" key={l}>{l}</span>)}</div>
+                  <h3><Link to={`/produk/${p.slug}`}>{p.name}</Link></h3>
+                  <div className="muted">{p.categories?.name}</div>
+                  <Price p={p} />
+                  <div className="row"><Link className="btn ghost sm" to={`/produk/${p.slug}`}>Detail</Link><button className="btn sm" onClick={() => cartApi.add(p)}>Beli</button></div>
+                </article>
+              ))}
+            </div>
+          </>
+        )}
       </section>
 
       <section className="sec">
-        <h2 className="h2c">Kenapa <span className="g">WAHYU STORE</span>?</h2>
-        <div className="checks">{checks.map((c) => <div className="chk2" key={c}><span className="ic xs"><Icon n="check" size={14} /></span>{c}</div>)}</div>
+        <h2 className="h2c">Kenapa <span className="g">Belanja Di Sini</span>?</h2>
+        <div className="checks">{highlights.map((c) => <div className="chk2" key={c}><span className="ic xs"><Icon n="check" size={14} /></span>{c}</div>)}</div>
       </section>
 
       {(reviews.length > 0 || (stats && stats.orders_completed > 0)) && (
@@ -153,15 +178,15 @@ export default function Store() {
       )}
 
       <section className="cta">
-        <h2>Siap Memesan?</h2><p>Pilih produk, buat pesanan, dan selesaikan lewat WhatsApp.</p>
-        <button className="btn lg" onClick={go}>Mulai Sekarang <Icon n="arrow" size={16} /></button>
+        <h2>Siap Memesan?</h2><p>Daftar, pilih produk, dan selesaikan lewat WhatsApp.</p>
+        {session ? <button className="btn lg" onClick={go}>Mulai Sekarang <Icon n="arrow" size={16} /></button> : <Link className="btn lg" to="/daftar">Daftar Gratis <Icon n="arrow" size={16} /></Link>}
       </section>
 
       <section className="about">
-        <h2>Tentang <span className="g">WAHYU STORE</span></h2>
-        <p><b>WAHYU STORE</b> adalah toko produk digital. Setiap pesanan memiliki nomor dan kode akses untuk dicek kapan saja, dan pembayaran baru dianggap lunas setelah admin memverifikasinya.</p>
+        <h2>Tentang <span className="g">Toko Kami</span></h2>
+        <p>Setiap pesanan memiliki nomor dan kode akses untuk dicek kapan saja, dan pembayaran baru dianggap lunas setelah admin memverifikasinya.</p>
         <p><b>Jam operasional:</b> {hours}</p>
-        <div className="row c"><Link className="btn ghost sm" to="/cek">Cek Pesanan</Link><Link className="btn ghost sm" to="/keranjang">Keranjang</Link></div>
+        <div className="row c"><Link className="btn ghost sm" to="/cek">Cek Pesanan</Link>{session ? <Link className="btn ghost sm" to="/akun">Akun Saya</Link> : <Link className="btn ghost sm" to="/masuk">Masuk</Link>}</div>
       </section>
     </>
   )
@@ -169,8 +194,14 @@ export default function Store() {
 
 export function ProductPage() {
   const { slug } = useParams()
+  const session = useSession()
   const [p, setP] = useState<Product | null | undefined>(undefined)
-  useEffect(() => { supabase.from('products').select(SEL).eq('slug', slug ?? '').maybeSingle().then(({ data }) => setP(data as unknown as Product | null)) }, [slug])
+  useEffect(() => {
+    if (!session) return
+    supabase.from('products').select(SEL).eq('slug', slug ?? '').maybeSingle().then(({ data }) => setP(data as unknown as Product | null))
+  }, [slug, session])
+  if (session === undefined) return <p className="muted">Memuat...</p>
+  if (!session) return <section className="box"><h1>Masuk dulu</h1><p>Produk dan harga hanya terlihat setelah Anda masuk.</p><div className="row"><Link className="btn" to="/masuk">Masuk</Link><Link className="btn ghost" to="/daftar">Daftar</Link></div></section>
   if (p === undefined) return <p className="muted">Memuat...</p>
   if (!p) return <p>Produk tidak ditemukan atau tidak tersedia. <Link to="/">Lihat semua produk</Link></p>
   return (

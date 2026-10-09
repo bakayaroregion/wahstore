@@ -1,4 +1,6 @@
-import { useSyncExternalStore } from 'react'
+import { useEffect, useState, useSyncExternalStore } from 'react'
+import type { Session } from '@supabase/supabase-js'
+import { supabase } from './supabase'
 
 export const rupiah = (n: number) => 'Rp ' + Number(n || 0).toLocaleString('id-ID')
 export const slugify = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
@@ -34,3 +36,29 @@ export const cartApi = {
   clear() { set([]) },
 }
 export const useCart = () => useSyncExternalStore((cb) => { subs.add(cb); return () => { subs.delete(cb) } }, () => cart)
+
+// undefined = sedang memuat, null = belum masuk
+export function useSession() {
+  const [s, setS] = useState<Session | null | undefined>(undefined)
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setS(data.session))
+    const { data } = supabase.auth.onAuthStateChange((_e, x) => setS(x))
+    return () => data.subscription.unsubscribe()
+  }, [])
+  return s
+}
+
+export interface Brand { name: string; tagline: string; logo: string }
+let brandCache: Brand | null = null
+export function useBrand() {
+  const [b, setB] = useState<Brand>(brandCache ?? { name: 'WAHYU STORE', tagline: 'Toko Produk Digital', logo: '' })
+  useEffect(() => {
+    supabase.from('store_settings').select('key,value').in('key', ['brand_name', 'brand_tagline', 'brand_logo_url']).then(({ data }) => {
+      const m: Record<string, string> = {}
+      ;(data ?? []).forEach((r) => { m[r.key] = String(r.value ?? '') })
+      const nb = { name: m.brand_name || 'WAHYU STORE', tagline: m.brand_tagline || 'Toko Produk Digital', logo: m.brand_logo_url || '' }
+      brandCache = nb; setB(nb)
+    })
+  }, [])
+  return b
+}

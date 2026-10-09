@@ -9,7 +9,6 @@ const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: 
 const Body = z.object({
   name: z.string().trim().min(2).max(80),
   phone: z.string().trim().min(8).max(20),
-  email: z.string().trim().email().max(120).optional().or(z.literal("")),
   note: z.string().trim().max(500).optional(),
   coupon: z.string().trim().max(40).optional(),
   items: z.array(z.object({
@@ -36,6 +35,7 @@ function limited(ip: string) {
 }
 
 const ERR: Record<string, string> = {
+  LOGIN_REQUIRED: "Silakan masuk terlebih dahulu.",
   PRODUCT_UNAVAILABLE: "Produk tidak tersedia.", VARIANT_UNAVAILABLE: "Varian tidak tersedia.", OUT_OF_STOCK: "Stok tidak mencukupi.",
   COUPON_INVALID: "Kupon tidak valid.", COUPON_EXHAUSTED: "Kuota kupon habis.", COUPON_MIN_PURCHASE: "Belum memenuhi minimum belanja kupon.",
   INVALID_QUANTITY: "Jumlah tidak valid.", INVALID_ITEMS: "Keranjang tidak valid.",
@@ -46,15 +46,21 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "Metode tidak didukung." }, 405);
   if (limited(req.headers.get("x-forwarded-for") ?? "unknown")) return json({ error: "Terlalu banyak percobaan. Coba lagi sebentar." }, 429);
 
+  // Wajib akun: token pengguna diverifikasi di sini (Verify JWT di gateway tetap boleh mati).
+  const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  const jwt = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
+  const { data: au, error: ae } = await db.auth.getUser(jwt);
+  if (ae || !au.user) return json({ error: "Silakan masuk atau daftar terlebih dahulu." }, 401);
+  const user = au.user;
+
   const parsed = Body.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return json({ error: "Data tidak valid.", fields: parsed.error.flatten().fieldErrors }, 400);
   const b = parsed.data, phone = normPhone(b.phone);
   if (!phone) return json({ error: "Nomor WhatsApp tidak valid." }, 400);
 
-  const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const token = b64url(crypto.getRandomValues(new Uint8Array(32)));
   const { data, error } = await db.rpc("create_order", {
-    p_name: b.name, p_phone: phone, p_email: b.email ?? "", p_note: b.note ?? "", p_coupon: b.coupon ?? "",
+    p_name: b.name, p_phone: phone, p_email: user.email ?? "", p_user: user.id, p_note: b.note ?? "", p_coupon: b.coupon ?? "",
     p_items: b.items, p_token_hash: await hashToken(token),
   });
   if (error) {
@@ -77,6 +83,6 @@ Deno.serve(async (req) => {
 
   // Token hanya dikembalikan sekali ini; simpan di sisi pembeli untuk halaman Cek Pesanan.
   return json({ order_number: o.order_number, access_token: token, subtotal: o.subtotal, discount_total: o.discount_total,
-    grand_total: o.grand_total, status: "PENDING", payment_status: "UNPAID", wa_url,
+    grand_total: o.grand_total, loyalty_discount: o.loyalty_discount, status: "PENDING", payment_status: "UNPAID", wa_url,
     warning: wa_url ? null : "Nomor WhatsApp toko belum diatur di admin." }, 201);
 });

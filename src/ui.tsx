@@ -82,6 +82,7 @@ export function Space() {
     <div className="space" aria-hidden="true">
       {stars.map((t, k) => <i className="star" key={k} style={{ left: `${t.x}%`, top: `${t.y}%`, width: t.z, height: t.z, opacity: t.o }} />)}
       {METEORS.map((m, k) => <i className="shoot" key={k} style={{ left: `${m[0]}%`, top: `${m[1]}%`, '--t': `${m[2]}s`, animationDelay: `-${m[3]}s` } as CSSProperties} />)}
+      <svg className="const" viewBox="0 0 100 100" preserveAspectRatio="none"><polyline points="2,16 6,22 12,19 15,27" /><polyline points="84,66 90,72 97,69" /><polyline points="20,86 26,81 32,85" /><polyline points="60,4 66,9 72,6" /></svg>
       {BRANDS.map((b, k) => <BrandTile b={b} i={k} key={b.slug} />)}
     </div>
   )
