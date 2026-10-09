@@ -5,7 +5,7 @@ import { cartApi, Product, rupiah, useSession } from '../lib'
 import { Icon, catIcon } from '../ui'
 
 const SEL = 'id,name,slug,sku,short_description,description,price,compare_at_price,labels,category_id,logo_url,categories(name)'
-interface Review { id: string; name: string; product_label: string | null; rating: number; body: string }
+interface Review { id: string; avatar_url: string | null; name: string; product_label: string | null; rating: number; body: string }
 interface Stats { orders_completed: number; rating_avg: number | null; rating_count: number }
 interface Cat { id: string; name: string; image_url: string | null }
 const DEFAULT_HL = ['Harga tampil jelas sebelum pesanan dibuat', 'Setiap pesanan punya nomor dan kode akses untuk cek status', 'Konfirmasi dan pembayaran langsung lewat WhatsApp', 'Pembayaran diverifikasi admin sebelum pesanan diproses', 'Riwayat status pesanan tercatat']
@@ -47,7 +47,7 @@ export default function Store() {
         if (r.key === 'highlights' && Array.isArray(r.value) && r.value.length) setHighlights((r.value as unknown[]).map(String))
       })
     })
-    supabase.from('testimonials').select('id,name,product_label,rating,body').eq('is_published', true).order('sort_order').then(({ data }) => setReviews((data ?? []) as Review[]))
+    supabase.from('testimonials').select('id,name,product_label,rating,body,avatar_url').eq('is_published', true).order('sort_order').then(({ data }) => setReviews((data ?? []) as Review[]))
     supabase.rpc('public_stats').then(({ data }) => { if (data) setStats(data as Stats) })
   }, [])
 
@@ -99,6 +99,7 @@ export default function Store() {
         <section className="sec">
           <div className="c"><span className="badge"><Icon n="chat" size={14} /> Testimoni Pelanggan</span></div>
           <h2 className="h2c">Apa Kata <span className="g">Mereka?</span></h2>
+          <p className="sub">Ulasan dari pelanggan kami</p>
           {reviews.length > 0 && (
             <>
               <div className="row c">
@@ -110,7 +111,7 @@ export default function Store() {
                 {reviews.map((r) => (
                   <figure className="rev" key={r.id}>
                     <div className="who">
-                      <span className="av">{r.name.slice(0, 2).toUpperCase()}</span>
+                      {r.avatar_url ? <img className="av" src={r.avatar_url} alt="" loading="lazy" /> : <span className="av">{r.name.slice(0, 2).toUpperCase()}</span>}
                       <div><b>{r.name}</b><div className="muted">{r.product_label}</div></div>
                       <span className="stars" role="img" aria-label={`${r.rating} dari 5 bintang`}>{'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}</span>
                     </div>

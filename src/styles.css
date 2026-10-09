@@ -97,3 +97,12 @@ table{border-collapse:collapse;width:100%;min-width:640px}th,td{text-align:left;
 .cat{padding:18px 10px;border-radius:14px}.cat b{font-size:14px}
 .callout{flex-direction:column;gap:12px;max-width:420px;text-align:center}
 .callout>span:first-child{display:inline-flex;gap:8px;align-items:center;font-weight:600}
+/* kartu keunggulan: berubah putih saat disentuh/di-hover */
+.fcard{transition:background .2s,color .2s,transform .2s,box-shadow .2s;cursor:default}
+.fcard:hover,.fcard:active{background:#fff;color:#111827;transform:translateY(-3px);box-shadow:0 12px 30px rgba(124,58,237,.25)}
+.fcard:hover p,.fcard:active p{color:#4b5563}
+@media(prefers-reduced-motion:reduce){.fcard{transition:none}.fcard:hover{transform:none}}
+/* testimoni */
+img.av{object-fit:cover;flex:none}
+.rev blockquote::before{content:"\275D";color:#7c5cf0;margin-right:8px;font-size:18px;vertical-align:-2px}
+.rev .who>div{min-width:0}

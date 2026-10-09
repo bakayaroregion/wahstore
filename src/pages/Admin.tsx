@@ -17,7 +17,7 @@ const mask = (p: string) => p.length > 6 ? p.slice(0, 4) + '****' + p.slice(-2) 
 export default function Admin() {
   const [sess, setSess] = useState<Session | null | undefined>(undefined)
   const [roles, setRoles] = useState<string[] | null>(null)
-  const [tab, setTab] = useState<'dash' | 'orders' | 'products' | 'categories' | 'content'>('dash')
+  const [tab, setTab] = useState<'dash' | 'orders' | 'products' | 'categories' | 'reviews' | 'content'>('dash')
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSess(data.session))
     const { data } = supabase.auth.onAuthStateChange((_e, s) => setSess(s))
@@ -43,13 +43,15 @@ export default function Admin() {
         <button className="chip" aria-pressed={tab === 'orders'} onClick={() => setTab('orders')}>Pesanan</button>
         {manage && <button className="chip" aria-pressed={tab === 'products'} onClick={() => setTab('products')}>Produk</button>}
         {manage && <button className="chip" aria-pressed={tab === 'categories'} onClick={() => setTab('categories')}>Kategori</button>}
+        {manage && <button className="chip" aria-pressed={tab === 'reviews'} onClick={() => setTab('reviews')}>Testimoni</button>}
         {manage && <button className="chip" aria-pressed={tab === 'content'} onClick={() => setTab('content')}>Konten</button>}
       </nav>
       {tab === 'dash' && <Orders ops={ops} summaryOnly />}
       {tab === 'orders' && <Orders ops={ops} />}
       {tab === 'products' && manage && <Products />}
       {tab === 'categories' && manage && <Categories />}
-      {tab === 'content' && manage && <Content />}
+      {tab === 'reviews' && manage && <Content part="reviews" />}
+      {tab === 'content' && manage && <Content part="settings" />}
     </div>
   )
 }
@@ -198,10 +200,10 @@ function Products() {
   )
 }
 
-interface Rev { id?: string; name: string; product_label: string; rating: number; body: string; is_published: boolean; sort_order: number }
-const blankRev: Rev = { name: '', product_label: '', rating: 5, body: '', is_published: false, sort_order: 0 }
+interface Rev { id?: string; avatar_url: string; name: string; product_label: string; rating: number; body: string; is_published: boolean; sort_order: number }
+const blankRev: Rev = { avatar_url: '', name: '', product_label: '', rating: 5, body: '', is_published: false, sort_order: 0 }
 
-function Content() {
+function Content({ part }: { part: 'settings' | 'reviews' }) {
   const [hours, setHours] = useState('')
   const [hl, setHl] = useState('')
   const [msg, setMsg] = useState('')
@@ -229,7 +231,8 @@ function Content() {
   }
   async function saveRev(e: FormEvent) {
     e.preventDefault(); if (!f) return; setErr('')
-    const { id, ...body } = f
+    const { id, ...rest } = f
+    const body = { ...rest, avatar_url: rest.avatar_url || null }
     const { error } = id ? await supabase.from('testimonials').update(body).eq('id', id) : await supabase.from('testimonials').insert(body)
     if (error) { setErr('Gagal menyimpan: ' + error.message); return }
     setF(null); load()
@@ -243,6 +246,7 @@ function Content() {
 
   return (
     <>
+      {part === 'settings' && <>
       <ShopSettings />
       <form className="box" onSubmit={saveSettings}>
         <h2>Jam operasional dan keunggulan</h2>
@@ -252,9 +256,11 @@ function Content() {
         {msg && <p role="status">{msg}</p>}
         <button className="btn">Simpan</button>
       </form>
+      </>}
 
-      <h2>Testimoni</h2>
-      <p className="muted">Isi hanya ulasan asli dari pelanggan. Ulasan karangan menyesatkan pembeli. Angka pesanan selesai dan rating di beranda dihitung otomatis dari data ini.</p>
+      {part === 'reviews' && <>
+      <h2>Testimoni pelanggan</h2>
+      <p className="muted">Isi hanya ulasan asli dari pelanggan (misalnya dari chat WhatsApp, dengan izin mereka). Ulasan karangan menyesatkan pembeli. Testimoni baru tampil di beranda setelah dicentang Tampilkan. Angka pesanan selesai dan rating dihitung otomatis dari data ini.</p>
       <button className="btn" onClick={() => setF(blankRev)}>Tambah testimoni</button>
       {f && (
         <form className="box formgrid" onSubmit={saveRev}>
@@ -262,6 +268,7 @@ function Content() {
           <label>Produk yang dibeli<input value={f.product_label} onChange={(e) => set('product_label', e.target.value)} /></label>
           <label>Rating<select value={f.rating} onChange={(e) => set('rating', Number(e.target.value))}>{[5, 4, 3, 2, 1].map((n) => <option key={n} value={n}>{n} bintang</option>)}</select></label>
           <label>Urutan<input type="number" value={f.sort_order} onChange={(e) => set('sort_order', Number(e.target.value))} /></label>
+          <div className="wide"><PhotoField label="Foto pelanggan (opsional)" value={f.avatar_url || ''} onChange={(u) => set('avatar_url', u)} folder="avatars" /></div>
           <label className="wide">Isi ulasan<textarea required maxLength={400} rows={3} value={f.body} onChange={(e) => set('body', e.target.value)} /></label>
           <label className="chk"><input type="checkbox" checked={f.is_published} onChange={(e) => set('is_published', e.target.checked)} />Tampilkan di beranda</label>
           {err && <p className="err wide" role="alert">{err}</p>}
@@ -272,12 +279,13 @@ function Content() {
         <thead><tr><th>Nama</th><th>Rating</th><th>Ulasan</th><th>Status</th><th></th></tr></thead>
         <tbody>
           {(rows ?? []).map((r) => (
-            <tr key={r.id}><td>{r.name}<div className="muted">{r.product_label}</div></td><td>{r.rating}/5</td><td>{r.body}</td><td>{r.is_published ? 'Tampil' : 'Disembunyikan'}</td>
+            <tr key={r.id}><td><div className="row">{r.avatar_url && <img className="thumb" src={r.avatar_url} alt="" />}<span>{r.name}<div className="muted">{r.product_label}</div></span></div></td><td>{r.rating}/5</td><td>{r.body}</td><td>{r.is_published ? 'Tampil' : 'Disembunyikan'}</td>
               <td><div className="acts"><button className="btn ghost sm" onClick={() => setF(r)}>Ubah</button><button className="btn bad sm" onClick={() => delRev(r.id)}>Hapus</button></div></td></tr>
           ))}
           {rows && rows.length === 0 && <tr><td colSpan={5} className="muted">Belum ada testimoni.</td></tr>}
         </tbody>
       </table></div>
+      </>}
     </>
   )
 }
