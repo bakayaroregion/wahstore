@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { supabase } from '../supabase'
 import { cartApi, Product, rupiah, useSession } from '../lib'
 import { Icon, catIcon } from '../ui'
@@ -21,20 +21,16 @@ function Price({ p }: { p: Product }) {
 function Gate() {
   return (
     <div className="callout">
-      <Icon n="shield" size={18} /> Masuk atau daftar untuk melihat semua produk dan harga
+      <span><Icon n="shield" size={18} /> Daftar untuk melihat semua produk &amp; harga</span>
       <Link className="btn" to="/daftar">Daftar Gratis <Icon n="arrow" size={16} /></Link>
-      <Link className="btn ghost" to="/masuk">Masuk</Link>
+      <span className="muted">Sudah punya akun? <Link to="/masuk">Masuk</Link></span>
     </div>
   )
 }
 
 export default function Store() {
   const session = useSession()
-  const [list, setList] = useState<Product[] | null>(null)
   const [cats, setCats] = useState<Cat[]>([])
-  const [q, setQ] = useState('')
-  const [cat, setCat] = useState('')
-  const [err, setErr] = useState('')
   const [wa, setWa] = useState('')
   const [hours, setHours] = useState('Setiap hari, 24 jam')
   const [highlights, setHighlights] = useState<string[]>(DEFAULT_HL)
@@ -54,24 +50,10 @@ export default function Store() {
     supabase.from('testimonials').select('id,name,product_label,rating,body').eq('is_published', true).order('sort_order').then(({ data }) => setReviews((data ?? []) as Review[]))
     supabase.rpc('public_stats').then(({ data }) => { if (data) setStats(data as Stats) })
   }, [])
-  // Produk dan harga hanya dimuat setelah masuk (RLS juga menolak pengunjung tanpa akun)
-  useEffect(() => {
-    if (!session) { setList(null); return }
-    supabase.from('products').select(SEL).order('created_at', { ascending: false }).then(({ data, error }) => {
-      if (error) setErr('Produk gagal dimuat. Muat ulang halaman.'); else setList(data as unknown as Product[])
-    })
-  }, [session])
 
-  const counts = useMemo(() => {
-    const m: Record<string, number> = {}
-    ;(list ?? []).forEach((p) => { if (p.category_id) m[p.category_id] = (m[p.category_id] ?? 0) + 1 })
-    return m
-  }, [list])
-  const go = () => document.getElementById('produk')?.scrollIntoView({ behavior: 'smooth' })
-  const pick = (id: string) => { setCat(id); go() }
-  const shown = (list ?? []).filter((p) => (!cat || p.category_id === cat) && p.name.toLowerCase().includes(q.toLowerCase()))
+  const nav = useNavigate()
   const start = session
-    ? <button className="btn lg" onClick={go}>Lihat Produk <Icon n="arrow" size={16} /></button>
+    ? <Link className="btn lg" to="/produk">Lihat Produk <Icon n="arrow" size={16} /></Link>
     : <Link className="btn lg" to="/daftar">Daftar Sekarang <Icon n="arrow" size={16} /></Link>
 
   return (
@@ -99,45 +81,13 @@ export default function Store() {
         <p className="sub">Pilih kategori produk sesuai kebutuhanmu</p>
         <div className="cats">
           {cats.map((c) => (
-            <button className="cat" key={c.id} onClick={() => pick(c.id)}>
+            <button className="cat" key={c.id} onClick={() => nav(session ? `/produk?cat=${c.id}` : '/daftar')}>
               {c.image_url ? <img src={c.image_url} alt="" loading="lazy" /> : <span className="ic sm"><Icon n={catIcon(c.name)} /></span>}
-              <b>{c.name}</b>{list && <span className="muted">{counts[c.id] ?? 0} produk</span>}
+              <b>{c.name}</b>
             </button>
           ))}
         </div>
         {session === null && <Gate />}
-      </section>
-
-      <section className="sec" id="produk">
-        <h2 className="h2c">Semua <span className="g">Produk</span></h2>
-        {session === null && <Gate />}
-        {session === undefined && <p className="muted c">Memuat...</p>}
-        {session && (
-          <>
-            <div className="tools">
-              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Cari produk" aria-label="Cari produk" />
-              <div className="chips">
-                <button className="chip" aria-pressed={!cat} onClick={() => setCat('')}>Semua</button>
-                {cats.map((c) => <button key={c.id} className="chip" aria-pressed={cat === c.id} onClick={() => setCat(c.id)}>{c.name}</button>)}
-              </div>
-            </div>
-            {err && <p className="err">{err}</p>}
-            {!list && !err && <p className="muted">Memuat produk...</p>}
-            {list && shown.length === 0 && <p className="muted">Belum ada produk yang cocok. Coba kata kunci atau kategori lain.</p>}
-            <div className="grid">
-              {shown.map((p) => (
-                <article className="card" key={p.id}>
-                  <Thumb p={p} />
-                  <div className="tags">{p.labels?.map((l) => <span className="tag" key={l}>{l}</span>)}</div>
-                  <h3><Link to={`/produk/${p.slug}`}>{p.name}</Link></h3>
-                  <div className="muted">{p.categories?.name}</div>
-                  <Price p={p} />
-                  <div className="row"><Link className="btn ghost sm" to={`/produk/${p.slug}`}>Detail</Link><button className="btn sm" onClick={() => cartApi.add(p)}>Beli</button></div>
-                </article>
-              ))}
-            </div>
-          </>
-        )}
       </section>
 
       <section className="sec">
@@ -179,7 +129,7 @@ export default function Store() {
 
       <section className="cta">
         <h2>Siap Memesan?</h2><p>Daftar, pilih produk, dan selesaikan lewat WhatsApp.</p>
-        {session ? <button className="btn lg" onClick={go}>Mulai Sekarang <Icon n="arrow" size={16} /></button> : <Link className="btn lg" to="/daftar">Daftar Gratis <Icon n="arrow" size={16} /></Link>}
+        {session ? <Link className="btn lg" to="/produk">Mulai Sekarang <Icon n="arrow" size={16} /></Link> : <Link className="btn lg" to="/daftar">Daftar Gratis <Icon n="arrow" size={16} /></Link>}
       </section>
 
       <section className="about">
@@ -203,7 +153,7 @@ export function ProductPage() {
   if (session === undefined) return <p className="muted">Memuat...</p>
   if (!session) return <section className="box"><h1>Masuk dulu</h1><p>Produk dan harga hanya terlihat setelah Anda masuk.</p><div className="row"><Link className="btn" to="/masuk">Masuk</Link><Link className="btn ghost" to="/daftar">Daftar</Link></div></section>
   if (p === undefined) return <p className="muted">Memuat...</p>
-  if (!p) return <p>Produk tidak ditemukan atau tidak tersedia. <Link to="/">Lihat semua produk</Link></p>
+  if (!p) return <p>Produk tidak ditemukan atau tidak tersedia. <Link to="/produk">Lihat semua produk</Link></p>
   return (
     <section className="detail">
       <Thumb p={p} big />
@@ -215,6 +165,53 @@ export function ProductPage() {
         <div className="prose">{p.description}</div>
         <button className="btn" onClick={() => cartApi.add(p)}>Tambah ke keranjang</button>
         <p className="muted">Ketersediaan dan harga final dikonfirmasi saat pesanan dibuat.</p>
+      </div>
+    </section>
+  )
+}
+
+export function Catalog() {
+  const session = useSession()
+  const [params, setParams] = useSearchParams()
+  const [list, setList] = useState<Product[] | null>(null)
+  const [cats, setCats] = useState<Cat[]>([])
+  const [q, setQ] = useState('')
+  const [err, setErr] = useState('')
+  const cat = params.get('cat') ?? ''
+  useEffect(() => { supabase.from('categories').select('id,name,image_url').order('sort_order').then(({ data }) => setCats((data ?? []) as Cat[])) }, [])
+  useEffect(() => {
+    if (!session) { setList(null); return }
+    supabase.from('products').select(SEL).order('created_at', { ascending: false }).then(({ data, error }) => {
+      if (error) setErr('Produk gagal dimuat. Muat ulang halaman.'); else setList(data as unknown as Product[])
+    })
+  }, [session])
+  const shown = useMemo(() => (list ?? []).filter((p) => (!cat || p.category_id === cat) && p.name.toLowerCase().includes(q.toLowerCase())), [list, cat, q])
+  if (session === undefined) return <p className="muted">Memuat...</p>
+  if (!session) return <section className="sec"><Gate /></section>
+  return (
+    <section className="sec">
+      <h1 className="h2c">Semua <span className="g">Produk</span></h1>
+      <div className="tools">
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Cari produk" aria-label="Cari produk" />
+        <div className="chips">
+          <button className="chip" aria-pressed={!cat} onClick={() => setParams({})}>Semua</button>
+          {cats.map((c) => <button key={c.id} className="chip" aria-pressed={cat === c.id} onClick={() => setParams({ cat: c.id })}>{c.name}</button>)}
+        </div>
+      </div>
+      {err && <p className="err">{err}</p>}
+      {!list && !err && <p className="muted">Memuat produk...</p>}
+      {list && shown.length === 0 && <p className="muted">Belum ada produk yang cocok. Coba kata kunci atau kategori lain.</p>}
+      <div className="grid">
+        {shown.map((p) => (
+          <article className="card" key={p.id}>
+            <Thumb p={p} />
+            <div className="tags">{p.labels?.map((l) => <span className="tag" key={l}>{l}</span>)}</div>
+            <h3><Link to={`/produk/${p.slug}`}>{p.name}</Link></h3>
+            <div className="muted">{p.categories?.name}</div>
+            <Price p={p} />
+            <div className="row"><Link className="btn ghost sm" to={`/produk/${p.slug}`}>Detail</Link><button className="btn sm" onClick={() => cartApi.add(p)}>Beli</button></div>
+          </article>
+        ))}
       </div>
     </section>
   )

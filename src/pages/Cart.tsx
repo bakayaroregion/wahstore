@@ -60,7 +60,7 @@ export function Cart() {
   if (session === undefined) return <p className="muted">Memuat...</p>
   if (!session) return <section className="box"><h1>Masuk dulu</h1><p>Untuk berbelanja, Anda perlu akun dengan email yang terdaftar.</p><div className="row"><Link className="btn" to="/masuk">Masuk</Link><Link className="btn ghost" to="/daftar">Daftar</Link></div></section>
 
-  if (cart.length === 0) return <section className="box"><h1>Keranjang kosong</h1><p>Pilih produk dulu. <Link to="/">Lihat produk</Link></p></section>
+  if (cart.length === 0) return <section className="box"><h1>Keranjang kosong</h1><p>Pilih produk dulu. <Link to="/produk">Lihat produk</Link></p></section>
 
   return (
     <div className="two">

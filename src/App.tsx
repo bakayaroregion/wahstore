@@ -3,7 +3,7 @@ import { Link, Route, Routes } from 'react-router-dom'
 import { supabase, configured } from './supabase'
 import { useBrand, useCart, useSession } from './lib'
 import { Space } from './ui'
-import Store, { ProductPage } from './pages/Store'
+import Store, { Catalog, ProductPage } from './pages/Store'
 import { Cart, Check } from './pages/Cart'
 import { Account, Login, Register } from './pages/Auth'
 import Admin from './pages/Admin'
@@ -33,6 +33,7 @@ function Shell() {
           <Link to="/cek">Cek pesanan</Link>
           {session ? (
             <>
+              <Link to="/produk">Produk</Link>
               <Link to="/akun">Akun</Link>
               <button className="linkbtn" onClick={() => supabase.auth.signOut()}>Keluar</button>
               <Link to="/keranjang" className="btn sm">Keranjang ({n})</Link>
@@ -46,6 +47,7 @@ function Shell() {
       <main className="wrap">
         <Routes>
           <Route path="/" element={<Store />} />
+          <Route path="/produk" element={<Catalog />} />
           <Route path="/produk/:slug" element={<ProductPage />} />
           <Route path="/keranjang" element={<Cart />} />
           <Route path="/cek" element={<Check />} />

@@ -93,3 +93,7 @@ table{border-collapse:collapse;width:100%;min-width:640px}th,td{text-align:left;
 .thumb.lg{width:72px;height:72px;border-radius:12px}.thumb.empty{display:grid;place-items:center;border:1px dashed var(--bd);color:var(--mu);font-size:11px;text-align:center}
 .photo{margin:10px 0}.photo .lbl{display:block;font-weight:600;font-size:13px;margin-bottom:6px}
 .login ul,.box ul{padding-left:20px}
+.cats{grid-template-columns:repeat(auto-fit,minmax(130px,1fr));max-width:1000px;margin:0 auto}
+.cat{padding:18px 10px;border-radius:14px}.cat b{font-size:14px}
+.callout{flex-direction:column;gap:12px;max-width:420px;text-align:center}
+.callout>span:first-child{display:inline-flex;gap:8px;align-items:center;font-weight:600}

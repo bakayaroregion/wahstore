@@ -100,7 +100,7 @@ export function Account() {
       <section className="box">
         <h2>Pesanan saya</h2>
         {orders === null && <p className="muted">Memuat...</p>}
-        {orders?.length === 0 && <p className="muted">Belum ada pesanan. <Link to="/">Lihat produk</Link></p>}
+        {orders?.length === 0 && <p className="muted">Belum ada pesanan. <Link to="/produk">Lihat produk</Link></p>}
         {orders?.map((o) => (
           <div className="line" key={o.order_number}>
             <div><b>{o.order_number}</b><div className="muted">{new Date(o.created_at).toLocaleString('id-ID')} · {o.items.map((i) => `${i.name} x${i.qty}`).join(', ')}</div>
