@@ -33,6 +33,23 @@ export function Cart() {
   const [cBusy, setCBusy] = useState(false)
   const sub = cart.reduce((a, i) => a + i.price * i.qty, 0)
 
+  async function applyCoupon() {
+    const code = f.coupon.trim()
+    if (!code) return
+    setCErr(''); setCBusy(true)
+    const { data, error } = await supabase.rpc('check_coupon', { p_code: code, p_subtotal: sub })
+    setCBusy(false)
+    if (error || !data) { setCErr(t('Kupon gagal dicek. Coba lagi.')); return }
+    const r = data as { ok: boolean; reason?: string; discount?: number; min?: number }
+    if (!r.ok) {
+      setApplied(null)
+      setCErr(r.reason === 'EXHAUSTED' ? t('Kupon sudah habis dipakai.') : r.reason === 'MIN_PURCHASE' ? `${t('Belanja minimal')} ${rupiah(r.min ?? 0)} ${t('untuk kupon ini.')}` : t('Kode kupon tidak valid atau sudah kedaluwarsa.'))
+      return
+    }
+    setApplied({ code, discount: Number(r.discount) })
+  }
+  useEffect(() => { if (applied) applyCoupon() }, [sub])
+
   async function submit(e: FormEvent) {
     e.preventDefault(); setErr('')
     if (!f.agree) { setErr(t('Setujui syarat transaksi terlebih dahulu.')); return }
@@ -72,22 +89,6 @@ export function Cart() {
   const loyDisc = Math.floor((sub - couponDisc) * loy / 100)
   const total = Math.max(0, sub - couponDisc - loyDisc)
 
-  async function applyCoupon() {
-    const code = f.coupon.trim()
-    if (!code) return
-    setCErr(''); setCBusy(true)
-    const { data, error } = await supabase.rpc('check_coupon', { p_code: code, p_subtotal: sub })
-    setCBusy(false)
-    if (error || !data) { setCErr(t('Kupon gagal dicek. Coba lagi.')); return }
-    const r = data as { ok: boolean; reason?: string; discount?: number; min?: number }
-    if (!r.ok) {
-      setApplied(null)
-      setCErr(r.reason === 'EXHAUSTED' ? t('Kupon sudah habis dipakai.') : r.reason === 'MIN_PURCHASE' ? `${t('Belanja minimal')} ${rupiah(r.min ?? 0)} ${t('untuk kupon ini.')}` : t('Kode kupon tidak valid atau sudah kedaluwarsa.'))
-      return
-    }
-    setApplied({ code, discount: Number(r.discount) })
-  }
-  useEffect(() => { if (applied) applyCoupon() }, [sub])
 
   return (
     <form className="checkout" onSubmit={submit}>
