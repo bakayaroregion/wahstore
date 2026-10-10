@@ -2,7 +2,7 @@ import { FormEvent, useEffect, useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
 import { rupiah, STATUS, useBrand, useSession } from '../lib'
-import { Icon, Logo, type IconName } from '../ui'
+import { Icon, Logo, PageBar, type IconName } from '../ui'
 import { useT } from '../i18n'
 
 function GoogleG() {
@@ -29,7 +29,7 @@ function AuthPage({ mode }: { mode: 'login' | 'register' }) {
   const nav = useNavigate()
   const t = useT()
   const brand = useBrand()
-  const [f, setF] = useState({ name: '', phone: '', email: '', pw: '' })
+  const [f, setF] = useState({ name: '', phone: '', email: '', pw: '', ref: (() => { try { return localStorage.getItem('ws_ref') || '' } catch { return '' } })() })
   const [show, setShow] = useState(false)
   const [remember, setRemember] = useState(true)
   const [err, setErr] = useState('')
@@ -42,6 +42,7 @@ function AuthPage({ mode }: { mode: 'login' | 'register' }) {
   async function go(e: FormEvent) {
     e.preventDefault(); setErr(''); setInfo(''); setBusy(true)
     if (reg) {
+      try { const rc = f.ref.trim().toUpperCase(); if (/^[A-Z0-9]{3,16}$/.test(rc)) localStorage.setItem('ws_ref', rc); else localStorage.removeItem('ws_ref') } catch { /* abaikan */ }
       const { data, error } = await supabase.auth.signUp({
         email: f.email.trim(), password: f.pw,
         options: { data: { full_name: f.name.trim(), phone: f.phone.trim() }, emailRedirectTo: window.location.origin },
@@ -64,6 +65,13 @@ function AuthPage({ mode }: { mode: 'login' | 'register' }) {
   }
   async function google() {
     setErr('')
+    // Cek dulu apakah Google sudah diaktifkan di Supabase, supaya pelanggan tidak terlempar ke halaman error.
+    try {
+      const base = import.meta.env.VITE_SUPABASE_URL as string
+      const r = await fetch(`${base}/auth/v1/settings`, { headers: { apikey: import.meta.env.VITE_SUPABASE_ANON_KEY as string } })
+      const j = await r.json()
+      if (!j?.external?.google) { setErr(t('Masuk dengan Google belum diaktifkan di toko ini.')); return }
+    } catch { /* jika pengecekan gagal, tetap coba */ }
     rememberChoice(true)
     const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } })
     if (error) setErr(t('Masuk dengan Google belum diaktifkan di toko ini.'))
@@ -91,6 +99,7 @@ function AuthPage({ mode }: { mode: 'login' | 'register' }) {
             <form onSubmit={go}>
               {reg && <Field icon="user" label={t('Nama')}><input required minLength={2} maxLength={80} autoComplete="name" placeholder={t('Nama lengkap')} value={f.name} onChange={set('name')} /></Field>}
               {reg && <Field icon="phone" label={t('Nomor WhatsApp (opsional)')}><input inputMode="tel" autoComplete="tel" placeholder="08xxxxxxxxxx" value={f.phone} onChange={set('phone')} /></Field>}
+              {reg && <Field icon="gift" label={t('Kode Referral (opsional)')}><input maxLength={16} placeholder={t('Contoh: ABC123')} value={f.ref} onChange={(e) => setF({ ...f, ref: e.target.value.toUpperCase() })} /></Field>}
               <Field icon="mail" label={t('Email')}><input type="email" required autoComplete="email" placeholder="email@gmail.com" value={f.email} onChange={set('email')} /></Field>
               <Field icon="lock" label={t('Kata sandi')} aside={!reg && <button type="button" className="linkbtn forgot" onClick={forgot}>{t('Lupa kata sandi?')}</button>}>
                 <input type={show ? 'text' : 'password'} required minLength={reg ? 8 : 1} autoComplete={reg ? 'new-password' : 'current-password'} placeholder={reg ? t('Minimal 8 karakter') : '••••••••'} value={f.pw} onChange={set('pw')} />
@@ -147,33 +156,51 @@ export function Account() {
     setMsg(error ? t('Gagal') + ': ' + error.message : t('Kata sandi diperbarui.')); if (!error) setPw('')
   }
   const name = String(session.user.user_metadata?.full_name ?? '')
+  const initial = (name || session.user.email || '?').trim()[0].toUpperCase()
   return (
-    <>
-      <section className="box"><h1>{t('Akun saya')}</h1><p>{name && <b>{name} · </b>}{session.user.email}</p></section>
-      <section className="box">
-        <h2>{t('Diskon pelanggan setia')}</h2>
-        <p>{t('Belanja setiap bulan dan diskon naik. Pesanan yang selesai pada bulan-bulan berturut-turut dihitung sampai bulan lalu.')}</p>
-        {loy && <p className="ok">Rangkaian Anda: {loy.streak} bulan. Diskon saat ini: {loy.percent}%.</p>}
-        {tiers.length > 0 && <ul>{tiers.map((t) => <li key={t.months}>{t.months} bulan berturut-turut: diskon {t.percent}%</li>)}</ul>}
-      </section>
-      <section className="box">
-        <h2>{t('Pesanan saya')}</h2>
+    <section className="refpage">
+      <PageBar icon="user" title={t('Akun')} />
+      <h1 className="h2c">{t('Akun saya')}</h1>
+      <p className="sub">{t('Kelola profil, diskon, dan pesanan Anda')}</p>
+
+      <div className="box profile">
+        <span className="avatar">{initial}</span>
+        <div><b>{name || t('Pelanggan')}</b><div className="muted">{session.user.email}</div></div>
+      </div>
+
+      <div className="box">
+        <h3>{t('Diskon pelanggan setia')}</h3>
+        <p className="muted">{t('Belanja setiap bulan dan diskon naik. Pesanan yang selesai pada bulan-bulan berturut-turut dihitung sampai bulan lalu.')}</p>
+        {loy && <p className="ok">{t('Rangkaian Anda')}: {loy.streak} {t('bulan')}. {t('Diskon saat ini')}: {loy.percent}%.</p>}
+        {tiers.map((x) => (
+          <div className={'step' + (loy && loy.streak >= x.months ? ' win' : '')} key={x.months}>
+            <span className="stepn">{loy && loy.streak >= x.months ? <Icon n="check" size={16} /> : x.months}</span>
+            <div><b>{x.months} {t('bulan berturut-turut')}</b><div className="muted">{t('Diskon')} {x.percent}%</div></div>
+          </div>
+        ))}
+        <Link className="btn ghost wide refbtn" to="/referral"><Icon n="gift" size={15} /> {t('Program Referral')}</Link>
+      </div>
+
+      <div className="box">
+        <h3>{t('Pesanan saya')}</h3>
         {orders === null && <p className="muted">{t('Memuat...')}</p>}
         {orders?.length === 0 && <p className="muted">{t('Belum ada pesanan.')} <Link to="/produk">{t('Lihat produk')}</Link></p>}
         {orders?.map((o) => (
           <div className="line" key={o.order_number}>
             <div><b>{o.order_number}</b><div className="muted">{new Date(o.created_at).toLocaleString('id-ID')} · {o.items.map((i) => `${i.name} x${i.qty}`).join(', ')}</div>
-              <div>{t(STATUS[o.order_status])} · {t(STATUS[o.payment_status])} · {t(STATUS[o.fulfillment_status])}</div>{o.public_note && <div className="muted">Catatan admin: {o.public_note}</div>}</div>
-            <div><b>{rupiah(o.grand_total)}</b>{o.loyalty_discount > 0 && <div className="muted">hemat loyalitas {rupiah(o.loyalty_discount)}</div>}</div>
+              <div className="muted">{t(STATUS[o.order_status])} · {t(STATUS[o.payment_status])} · {t(STATUS[o.fulfillment_status])}</div>{o.public_note && <div className="muted">{t('Catatan admin:')} {o.public_note}</div>}</div>
+            <div><b>{rupiah(o.grand_total)}</b>{o.loyalty_discount > 0 && <div className="muted">{t('hemat loyalitas')} {rupiah(o.loyalty_discount)}</div>}</div>
           </div>
         ))}
-      </section>
+      </div>
+
       <form className="box" onSubmit={changePw}>
-        <h2>{t('Ubah kata sandi')}</h2>
+        <h3>{t('Ubah kata sandi')}</h3>
         <label>{t('Kata sandi baru (min. 8 karakter)')}<input type="password" minLength={8} required autoComplete="new-password" value={pw} onChange={(e) => setPw(e.target.value)} /></label>
         {msg && <p role="status">{msg}</p>}
         <button className="btn">{t('Simpan')}</button>
       </form>
-    </>
+      <div className="c"><Link className="btn ghost" to="/produk">{t('Kembali ke Katalog')}</Link></div>
+    </section>
   )
 }

@@ -185,7 +185,7 @@ export function ProductPage() {
   )
 }
 
-function ProductCard({ p }: { p: Product }) {
+function ProductCard({ p, inStock }: { p: Product; inStock: boolean | undefined }) {
   const t = useT()
   const favs = useFavs()
   const fav = favs.includes(p.id)
@@ -208,10 +208,10 @@ function ProductCard({ p }: { p: Product }) {
         </div>
       </div>
       {p.short_description && <p className="pdesc">{p.short_description}</p>}
-      <div className="tags">{p.labels?.map((l) => <span className="tag" key={l}>{l}</span>)}</div>
+      <div className="tags pills">{inStock !== undefined && <span className={'tag ' + (inStock ? 'in' : 'out')}>{inStock ? t('Tersedia') : t('Stok habis')}</span>}{p.labels?.map((l) => <span className="tag" key={l}>{l}</span>)}</div>
       <div className="pfoot">
         <div className="price"><span className="g">{rupiah(p.price)}</span>{p.compare_at_price && p.compare_at_price > p.price && <s>{rupiah(p.compare_at_price)}</s>}</div>
-        <button className="btn sm" onClick={() => cartApi.add(p)}><Icon n="cart" size={14} /> {t('Beli')}</button>
+        <button className="btn buy" disabled={inStock === false} onClick={() => cartApi.add(p)}><Icon n="cart" size={16} /> {t('Beli')}</button>
       </div>
     </article>
   )
@@ -220,14 +220,20 @@ function ProductCard({ p }: { p: Product }) {
 function useProducts(session: unknown) {
   const t = useT()
   const [list, setList] = useState<Product[] | null>(null)
+  const [stock, setStock] = useState<Record<string, boolean>>({})
   const [err, setErr] = useState('')
   useEffect(() => {
     if (!session) { setList(null); return }
+    supabase.rpc('product_stock').then(({ data }) => {
+      const m: Record<string, boolean> = {}
+      ;(data as { product_id: string; in_stock: boolean }[] | null)?.forEach((r) => { m[r.product_id] = r.in_stock })
+      setStock(m)
+    })
     supabase.from('products').select(SEL).order('created_at', { ascending: false }).then(({ data, error }) => {
       if (error) setErr(t('Produk gagal dimuat. Muat ulang halaman.')); else setList(data as unknown as Product[])
     })
   }, [session])
-  return { list, err }
+  return { list, err, stock }
 }
 
 export function Catalog() {
@@ -236,7 +242,7 @@ export function Catalog() {
   const [params, setParams] = useSearchParams()
   const [cats, setCats] = useState<Cat[]>([])
   const [q, setQ] = useState('')
-  const { list, err } = useProducts(session)
+  const { list, err, stock } = useProducts(session)
   const cat = params.get('cat') ?? ''
   useEffect(() => { supabase.from('categories').select('id,name,image_url').order('sort_order').then(({ data }) => setCats((data ?? []) as Cat[])) }, [])
   const shown = useMemo(() => (list ?? []).filter((p) => {
@@ -257,7 +263,7 @@ export function Catalog() {
       {err && <p className="err">{err}</p>}
       {!list && !err && <p className="muted">{t('Memuat produk...')}</p>}
       {list && shown.length === 0 && <p className="muted">{t('Belum ada produk yang cocok. Coba kata kunci atau kategori lain.')}</p>}
-      <div className="pgrid">{shown.map((p) => <ProductCard p={p} key={p.id} />)}</div>
+      <div className="pgrid">{shown.map((p) => <ProductCard p={p} inStock={stock[p.id]} key={p.id} />)}</div>
     </section>
   )
 }
@@ -266,7 +272,7 @@ export function Favorites() {
   const session = useSession()
   const t = useT()
   const favs = useFavs()
-  const { list, err } = useProducts(session)
+  const { list, err, stock } = useProducts(session)
   if (session === undefined) return <p className="muted">{t('Memuat...')}</p>
   if (!session) return <section className="sec"><Gate /></section>
   const shown = (list ?? []).filter((p) => favs.includes(p.id))
@@ -276,7 +282,7 @@ export function Favorites() {
       {err && <p className="err">{err}</p>}
       {!list && !err && <p className="muted">{t('Memuat produk...')}</p>}
       {list && shown.length === 0 && <p className="muted">{t('Belum ada favorit. Tekan ikon hati pada produk untuk menyimpannya.')} <Link to="/produk">{t('Lihat produk')}</Link></p>}
-      <div className="pgrid">{shown.map((p) => <ProductCard p={p} key={p.id} />)}</div>
+      <div className="pgrid">{shown.map((p) => <ProductCard p={p} inStock={stock[p.id]} key={p.id} />)}</div>
     </section>
   )
 }
