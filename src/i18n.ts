@@ -1,0 +1,196 @@
+import { useSyncExternalStore } from 'react'
+
+export type Lang = 'id' | 'en' | 'km'
+export type Theme = 'dark' | 'light'
+
+function load<T extends string>(k: string, ok: readonly T[], d: T): T {
+  try { const v = localStorage.getItem(k) as T | null; if (v && ok.includes(v)) return v } catch { /* penyimpanan tidak tersedia */ }
+  return d
+}
+function save(k: string, v: string) { try { localStorage.setItem(k, v) } catch { /* abaikan */ } }
+
+let lang: Lang = load('ws_lang', ['id', 'en', 'km'] as const, 'id')
+let theme: Theme = load('ws_theme', ['dark', 'light'] as const, 'dark')
+const subs = new Set<() => void>()
+const sub = (cb: () => void) => { subs.add(cb); return () => { subs.delete(cb) } }
+
+export function applyPrefs() {
+  document.documentElement.lang = lang
+  document.documentElement.dataset.theme = theme
+}
+export function setLang(l: Lang) { lang = l; save('ws_lang', l); applyPrefs(); subs.forEach((f) => f()) }
+export function setTheme(t: Theme) { theme = t; save('ws_theme', t); applyPrefs(); subs.forEach((f) => f()) }
+export const useLang = () => useSyncExternalStore(sub, () => lang)
+export const useTheme = () => useSyncExternalStore(sub, () => theme)
+
+// Kamus: kunci = teks Indonesia, nilai = [English, Khmer]. Teks yang tidak ada di sini tampil apa adanya (mis. isi dari admin).
+const D: Record<string, [string, string]> = {
+  // header & footer
+  'Cek pesanan': ['Track order', 'ពិនិត្យការបញ្ជាទិញ'],
+  'Cek Pesanan': ['Track Order', 'ពិនិត្យការបញ្ជាទិញ'],
+  'Produk': ['Products', 'ផលិតផល'],
+  'Akun': ['Account', 'គណនី'],
+  'Akun Saya': ['My Account', 'គណនីរបស់ខ្ញុំ'],
+  'Keluar': ['Sign out', 'ចាកចេញ'],
+  'Keranjang': ['Cart', 'កន្ត្រក'],
+  'Masuk': ['Sign in', 'ចូល'],
+  'Daftar': ['Register', 'ចុះឈ្មោះ'],
+  'Bahasa': ['Language', 'ភាសា'],
+  'Mode gelap': ['Dark mode', 'ទម្រង់ងងឹត'],
+  'Mode terang': ['Light mode', 'ទម្រង់ភ្លឺ'],
+  'Beranda': ['Home', 'ទំព័រដើម'],
+  'Pesanan diproses melalui WhatsApp.': ['Orders are processed via WhatsApp.', 'ការបញ្ជាទិញត្រូវបានដំណើរការតាម WhatsApp។'],
+  'Merek dan logo milik pemiliknya masing-masing.': ['Brands and logos belong to their respective owners.', 'ម៉ាក និងឡូហ្គោជាកម្មសិទ្ធិរបស់ម្ចាស់រៀងៗខ្លួន។'],
+  'tidak berafiliasi dengan merek yang ditampilkan.': ['is not affiliated with the brands shown.', 'មិនមានទំនាក់ទំនងជាមួយម៉ាកដែលបង្ហាញទេ។'],
+  'Halaman tidak ditemukan.': ['Page not found.', 'រកមិនឃើញទំព័រនេះទេ។'],
+  'Kembali ke beranda': ['Back to home', 'ត្រឡប់ទៅទំព័រដើម'],
+  // beranda
+  'Diskon untuk pelanggan setia tiap bulan': ['Monthly discounts for loyal customers', 'បញ្ចុះតម្លៃប្រចាំខែសម្រាប់អតិថិជនស្មោះត្រង់'],
+  'Belanja': ['Shop', 'ទិញ'],
+  'Produk Digital': ['Digital Products', 'ផលិតផលឌីជីថល'],
+  'Jadi Lebih Mudah': ['Made Easier', 'កាន់តែងាយស្រួល'],
+  'Daftar dengan email, pilih produk, lalu lanjutkan ke WhatsApp untuk pembayaran. Belanja rutin tiap bulan, diskonnya naik.': ['Sign up with your email, pick a product, then continue to WhatsApp to pay. Shop every month and your discount grows.', 'ចុះឈ្មោះដោយអ៊ីមែល ជ្រើសរើសផលិតផល រួចបន្តទៅ WhatsApp ដើម្បីបង់ប្រាក់។ ទិញជាប្រចាំរាល់ខែ ការបញ្ចុះតម្លៃនឹងកាន់តែច្រើន។'],
+  'Lihat Produk': ['View Products', 'មើលផលិតផល'],
+  'Daftar Sekarang': ['Register Now', 'ចុះឈ្មោះឥឡូវនេះ'],
+  'Hubungi Admin': ['Contact Admin', 'ទាក់ទងអ្នកគ្រប់គ្រង'],
+  'Pesanan Tercatat': ['Orders Recorded', 'ការបញ្ជាទិញមានកំណត់ត្រា'],
+  'Setiap pesanan punya nomor unik dan bisa dicek statusnya kapan saja.': ['Every order has a unique number and its status can be checked anytime.', 'រាល់ការបញ្ជាទិញមានលេខផ្ទាល់ខ្លួន ហើយអាចពិនិត្យស្ថានភាពបានគ្រប់ពេល។'],
+  'Konfirmasi via WhatsApp': ['Confirm via WhatsApp', 'បញ្ជាក់តាម WhatsApp'],
+  'Setelah pesan, lanjut ke WhatsApp untuk petunjuk pembayaran.': ['After ordering, continue to WhatsApp for payment instructions.', 'បន្ទាប់ពីបញ្ជាទិញ សូមបន្តទៅ WhatsApp សម្រាប់ការណែនាំអំពីការបង់ប្រាក់។'],
+  'Diskon Pelanggan Setia': ['Loyalty Discount', 'បញ្ចុះតម្លៃអតិថិជនស្មោះត្រង់'],
+  'Belanja tiap bulan dan dapatkan diskon yang makin besar.': ['Shop every month and get bigger discounts.', 'ទិញរាល់ខែ ហើយទទួលបានការបញ្ចុះតម្លៃកាន់តែច្រើន។'],
+  'Kategori': ['Categories', 'ប្រភេទ'],
+  'Tersedia': ['Available', 'ដែលមាន'],
+  'Pilih kategori produk sesuai kebutuhanmu': ['Pick a product category that fits your needs', 'ជ្រើសរើសប្រភេទផលិតផលតាមតម្រូវការរបស់អ្នក'],
+  'Daftar untuk melihat semua produk & harga': ['Register to see all products & prices', 'ចុះឈ្មោះដើម្បីមើលផលិតផល និងតម្លៃទាំងអស់'],
+  'Daftar Gratis': ['Register Free', 'ចុះឈ្មោះឥតគិតថ្លៃ'],
+  'Sudah punya akun?': ['Already have an account?', 'មានគណនីរួចហើយ?'],
+  'Belum punya akun?': ['Don\'t have an account?', 'មិនទាន់មានគណនី?'],
+  'Kenapa': ['Why', 'ហេតុអ្វី'],
+  'Belanja Di Sini': ['Shop Here', 'ទិញនៅទីនេះ'],
+  'Harga tampil jelas sebelum pesanan dibuat': ['Prices are shown clearly before you order', 'តម្លៃបង្ហាញច្បាស់មុនពេលបញ្ជាទិញ'],
+  'Setiap pesanan punya nomor dan kode akses untuk cek status': ['Every order has a number and access code to check status', 'រាល់ការបញ្ជាទិញមានលេខ និងកូដចូលប្រើដើម្បីពិនិត្យស្ថានភាព'],
+  'Konfirmasi dan pembayaran langsung lewat WhatsApp': ['Confirmation and payment directly via WhatsApp', 'ការបញ្ជាក់ និងការបង់ប្រាក់ដោយផ្ទាល់តាម WhatsApp'],
+  'Pembayaran diverifikasi admin sebelum pesanan diproses': ['Payments are verified by admin before orders are processed', 'ការបង់ប្រាក់ត្រូវបានផ្ទៀងផ្ទាត់ដោយអ្នកគ្រប់គ្រងមុនដំណើរការបញ្ជាទិញ'],
+  'Riwayat status pesanan tercatat': ['Order status history is recorded', 'ប្រវត្តិស្ថានភាពការបញ្ជាទិញមានកំណត់ត្រា'],
+  'Testimoni Pelanggan': ['Customer Testimonials', 'មតិអតិថិជន'],
+  'Apa Kata': ['What Do', 'តើ'],
+  'Mereka?': ['They Say?', 'ពួកគេនិយាយអ្វី?'],
+  'Ulasan dari pelanggan kami': ['Reviews from our customers', 'ការវាយតម្លៃពីអតិថិជនរបស់យើង'],
+  'Geser untuk melihat lebih banyak': ['Swipe to see more', 'អូសដើម្បីមើលបន្ថែម'],
+  'Sebelumnya': ['Previous', 'មុន'],
+  'Berikutnya': ['Next', 'បន្ទាប់'],
+  'Pelanggan Puas': ['Happy Customers', 'អតិថិជនពេញចិត្ត'],
+  'Pelanggan Bertransaksi': ['Customers Who Ordered', 'អតិថិជនដែលបានបញ្ជាទិញ'],
+  'Rating Rata-rata': ['Average Rating', 'ពិន្ទុជាមធ្យម'],
+  'ulasan': ['reviews', 'ការវាយតម្លៃ'],
+  'Repeat Order': ['Repeat Orders', 'ការបញ្ជាទិញម្តងទៀត'],
+  'Siap Memesan?': ['Ready to Order?', 'ត្រៀមបញ្ជាទិញឬនៅ?'],
+  'Daftar, pilih produk, dan selesaikan lewat WhatsApp.': ['Register, pick a product, and finish via WhatsApp.', 'ចុះឈ្មោះ ជ្រើសរើសផលិតផល ហើយបញ្ចប់តាម WhatsApp។'],
+  'Mulai Sekarang': ['Start Now', 'ចាប់ផ្តើមឥឡូវនេះ'],
+  'Tentang': ['About', 'អំពី'],
+  'Toko Kami': ['Our Store', 'ហាងរបស់យើង'],
+  'Setiap pesanan memiliki nomor dan kode akses untuk dicek kapan saja, dan pembayaran baru dianggap lunas setelah admin memverifikasinya.': ['Every order has a number and access code you can use to check it anytime, and payment counts as paid only after admin verifies it.', 'រាល់ការបញ្ជាទិញមានលេខ និងកូដចូលប្រើដើម្បីពិនិត្យបានគ្រប់ពេល ហើយការបង់ប្រាក់ត្រូវបានចាត់ទុកថាបានបង់ក្រោយពេលអ្នកគ្រប់គ្រងផ្ទៀងផ្ទាត់។'],
+  'Jam operasional:': ['Opening hours:', 'ម៉ោងបើកទទួលសេវា៖'],
+  // produk & katalog
+  'Memuat...': ['Loading...', 'កំពុងផ្ទុក...'],
+  'Memuat produk...': ['Loading products...', 'កំពុងផ្ទុកផលិតផល...'],
+  'Masuk dulu': ['Please sign in', 'សូមចូលជាមុនសិន'],
+  'Produk dan harga hanya terlihat setelah Anda masuk.': ['Products and prices are only visible after you sign in.', 'ផលិតផល និងតម្លៃអាចមើលឃើញបានតែក្រោយពេលអ្នកចូលប្រើ។'],
+  'Produk tidak ditemukan atau tidak tersedia.': ['Product not found or unavailable.', 'រកមិនឃើញផលិតផល ឬមិនមាន។'],
+  'Lihat semua produk': ['View all products', 'មើលផលិតផលទាំងអស់'],
+  'Tambah ke keranjang': ['Add to cart', 'បន្ថែមទៅកន្ត្រក'],
+  'Ketersediaan dan harga final dikonfirmasi saat pesanan dibuat.': ['Availability and final price are confirmed when the order is created.', 'ភាពមាន និងតម្លៃចុងក្រោយនឹងត្រូវបានបញ្ជាក់នៅពេលបង្កើតការបញ្ជាទិញ។'],
+  'Semua': ['All', 'ទាំងអស់'],
+  'Cari produk': ['Search products', 'ស្វែងរកផលិតផល'],
+  'Produk gagal dimuat. Muat ulang halaman.': ['Failed to load products. Reload the page.', 'ផ្ទុកផលិតផលមិនបានទេ។ សូមផ្ទុកទំព័រឡើងវិញ។'],
+  'Belum ada produk yang cocok. Coba kata kunci atau kategori lain.': ['No matching products yet. Try another keyword or category.', 'មិនទាន់មានផលិតផលត្រូវគ្នា។ សូមសាកល្បងពាក្យគន្លឹះ ឬប្រភេទផ្សេង។'],
+  'Detail': ['Details', 'ព័ត៌មានលម្អិត'],
+  'Beli': ['Buy', 'ទិញ'],
+  // auth
+  'Daftar akun': ['Create account', 'បង្កើតគណនី'],
+  'Nama': ['Name', 'ឈ្មោះ'],
+  'Nomor WhatsApp': ['WhatsApp number', 'លេខ WhatsApp'],
+  'Email': ['Email', 'អ៊ីមែល'],
+  'Kata sandi': ['Password', 'ពាក្យសម្ងាត់'],
+  'Kata sandi (min. 8 karakter)': ['Password (min. 8 characters)', 'ពាក្យសម្ងាត់ (យ៉ាងតិច ៨ តួអក្សរ)'],
+  'Mendaftar...': ['Registering...', 'កំពុងចុះឈ្មោះ...'],
+  'Cek email Anda': ['Check your email', 'សូមពិនិត្យអ៊ីមែលរបស់អ្នក'],
+  'Ke halaman masuk': ['Go to sign in', 'ទៅទំព័រចូល'],
+  'Email ini sudah terdaftar. Silakan masuk.': ['This email is already registered. Please sign in.', 'អ៊ីមែលនេះបានចុះឈ្មោះរួចហើយ។ សូមចូលប្រើ។'],
+  'Email atau kata sandi salah, atau email belum diverifikasi.': ['Wrong email or password, or the email is not verified yet.', 'អ៊ីមែល ឬពាក្យសម្ងាត់មិនត្រឹមត្រូវ ឬអ៊ីមែលមិនទាន់បានផ្ទៀងផ្ទាត់។'],
+  'Lupa kata sandi?': ['Forgot password?', 'ភ្លេចពាក្យសម្ងាត់?'],
+  'Isi email Anda dulu, lalu tekan Lupa kata sandi.': ['Enter your email first, then press Forgot password.', 'សូមបញ្ចូលអ៊ីមែលជាមុន រួចចុចភ្លេចពាក្យសម្ងាត់។'],
+  'Jika email terdaftar, tautan untuk mengatur ulang kata sandi sudah dikirim.': ['If the email is registered, a password reset link has been sent.', 'ប្រសិនបើអ៊ីមែលបានចុះឈ្មោះ តំណកំណត់ពាក្យសម្ងាត់ឡើងវិញត្រូវបានផ្ញើហើយ។'],
+  'Akun saya': ['My account', 'គណនីរបស់ខ្ញុំ'],
+  'Diskon pelanggan setia': ['Loyalty discount', 'បញ្ចុះតម្លៃអតិថិជនស្មោះត្រង់'],
+  'Belanja setiap bulan dan diskon naik. Pesanan yang selesai pada bulan-bulan berturut-turut dihitung sampai bulan lalu.': ['Shop every month and your discount goes up. Completed orders in consecutive months are counted up to last month.', 'ទិញរាល់ខែ ការបញ្ចុះតម្លៃកើនឡើង។ ការបញ្ជាទិញដែលបានបញ្ចប់ក្នុងខែជាប់គ្នាត្រូវបានរាប់រហូតដល់ខែមុន។'],
+  'Pesanan saya': ['My orders', 'ការបញ្ជាទិញរបស់ខ្ញុំ'],
+  'Belum ada pesanan.': ['No orders yet.', 'មិនទាន់មានការបញ្ជាទិញទេ។'],
+  'Lihat produk': ['View products', 'មើលផលិតផល'],
+  'Ubah kata sandi': ['Change password', 'ប្តូរពាក្យសម្ងាត់'],
+  'Kata sandi baru (min. 8 karakter)': ['New password (min. 8 characters)', 'ពាក្យសម្ងាត់ថ្មី (យ៉ាងតិច ៨ តួអក្សរ)'],
+  'Simpan': ['Save', 'រក្សាទុក'],
+  'Kata sandi diperbarui.': ['Password updated.', 'បានធ្វើបច្ចុប្បន្នភាពពាក្យសម្ងាត់។'],
+  // keranjang & cek
+  'Setujui syarat transaksi terlebih dahulu.': ['Please agree to the transaction terms first.', 'សូមយល់ព្រមតាមលក្ខខណ្ឌប្រតិបត្តិការជាមុនសិន។'],
+  'Pesanan gagal dibuat. Coba lagi.': ['Failed to create the order. Try again.', 'បង្កើតការបញ្ជាទិញមិនបានទេ។ សូមព្យាយាមម្តងទៀត។'],
+  'Pesanan dibuat': ['Order created', 'បានបង្កើតការបញ្ជាទិញ'],
+  'Nomor pesanan:': ['Order number:', 'លេខបញ្ជាទិញ៖'],
+  'Lanjutkan ke WhatsApp': ['Continue to WhatsApp', 'បន្តទៅ WhatsApp'],
+  'Tersalin': ['Copied', 'បានចម្លង'],
+  'Salin nomor pesanan': ['Copy order number', 'ចម្លងលេខបញ្ជាទិញ'],
+  'Cek status pesanan': ['Check order status', 'ពិនិត្យស្ថានភាពការបញ្ជាទិញ'],
+  'Simpan nomor pesanan. WhatsApp hanya terbuka, pesan tidak terkirim otomatis. Anda yang menekan kirim.': ['Save your order number. WhatsApp only opens; the message is not sent automatically. You press send.', 'សូមរក្សាទុកលេខបញ្ជាទិញ។ WhatsApp គ្រាន់តែបើក សារមិនត្រូវបានផ្ញើដោយស្វ័យប្រវត្តិទេ។ អ្នកត្រូវចុចផ្ញើ។'],
+  'Untuk berbelanja, Anda perlu akun dengan email yang terdaftar.': ['To shop, you need an account with a registered email.', 'ដើម្បីទិញទំនិញ អ្នកត្រូវមានគណនីដែលមានអ៊ីមែលបានចុះឈ្មោះ។'],
+  'Keranjang kosong': ['Your cart is empty', 'កន្ត្រករបស់អ្នកទទេ'],
+  'Pilih produk dulu.': ['Pick a product first.', 'សូមជ្រើសរើសផលិតផលជាមុនសិន។'],
+  'Kurangi': ['Decrease', 'បន្ថយ'],
+  'Tambah': ['Increase', 'បន្ថែម'],
+  'Hapus': ['Remove', 'លុប'],
+  'Subtotal perkiraan:': ['Estimated subtotal:', 'សរុបរងប៉ាន់ស្មាន៖'],
+  'perkiraan hemat': ['estimated savings', 'ប៉ាន់ស្មានថាសន្សំបាន'],
+  'Total final, diskon kupon, dan stok dihitung server saat pesanan dibuat.': ['The final total, coupon discount, and stock are calculated by the server when the order is created.', 'សរុបចុងក្រោយ ការបញ្ចុះតម្លៃគូប៉ុង និងស្តុក ត្រូវបានគណនាដោយម៉ាស៊ីនមេនៅពេលបង្កើតការបញ្ជាទិញ។'],
+  'Data pembeli': ['Buyer details', 'ព័ត៌មានអ្នកទិញ'],
+  'Pesanan atas akun': ['Order under account', 'ការបញ្ជាទិញក្រោមគណនី'],
+  'Kode kupon (opsional)': ['Coupon code (optional)', 'កូដគូប៉ុង (ស្រេចចិត្ត)'],
+  'Catatan': ['Note', 'កំណត់ចំណាំ'],
+  'Saya setuju dengan syarat transaksi toko.': ['I agree to the store\'s transaction terms.', 'ខ្ញុំយល់ព្រមតាមលក្ខខណ្ឌប្រតិបត្តិការរបស់ហាង។'],
+  'Membuat pesanan...': ['Creating order...', 'កំពុងបង្កើតការបញ្ជាទិញ...'],
+  'Buat pesanan': ['Place order', 'បង្កើតការបញ្ជាទិញ'],
+  'Nomor pesanan': ['Order number', 'លេខបញ្ជាទិញ'],
+  'Kode akses': ['Access code', 'កូដចូលប្រើ'],
+  'Mencari...': ['Searching...', 'កំពុងស្វែងរក...'],
+  'Cek status': ['Check status', 'ពិនិត្យស្ថានភាព'],
+  'Pesanan di perangkat ini': ['Orders on this device', 'ការបញ្ជាទិញលើឧបករណ៍នេះ'],
+  'Pesanan tidak ditemukan. Periksa nomor pesanan dan kode akses.': ['Order not found. Check the order number and access code.', 'រកមិនឃើញការបញ្ជាទិញ។ សូមពិនិត្យលេខបញ្ជាទិញ និងកូដចូលប្រើ។'],
+  'Total': ['Total', 'សរុប'],
+  'Pesanan:': ['Order:', 'ការបញ្ជាទិញ៖'],
+  'Pembayaran:': ['Payment:', 'ការបង់ប្រាក់៖'],
+  'Pemrosesan:': ['Processing:', 'ដំណើរការ៖'],
+  'Catatan admin:': ['Admin note:', 'កំណត់ចំណាំអ្នកគ្រប់គ្រង៖'],
+  'Ada kendala? Hubungi admin lewat WhatsApp dan sebutkan nomor pesanan.': ['Having trouble? Contact admin via WhatsApp and mention your order number.', 'មានបញ្ហា? សូមទាក់ទងអ្នកគ្រប់គ្រងតាម WhatsApp ហើយប្រាប់លេខបញ្ជាទិញ។'],
+  // status
+  'Menunggu konfirmasi': ['Awaiting confirmation', 'រង់ចាំការបញ្ជាក់'],
+  'Dikonfirmasi': ['Confirmed', 'បានបញ្ជាក់'],
+  'Selesai': ['Completed', 'បានបញ្ចប់'],
+  'Dibatalkan': ['Cancelled', 'បានលុបចោល'],
+  'Belum dibayar': ['Unpaid', 'មិនទាន់បង់ប្រាក់'],
+  'Menunggu verifikasi': ['Awaiting verification', 'រង់ចាំការផ្ទៀងផ្ទាត់'],
+  'Lunas': ['Paid', 'បានបង់ប្រាក់'],
+  'Gagal': ['Failed', 'បរាជ័យ'],
+  'Dikembalikan': ['Refunded', 'បានសងប្រាក់វិញ'],
+  'Belum diproses': ['Not started', 'មិនទាន់ដំណើរការ'],
+  'Sedang diproses': ['Processing', 'កំពុងដំណើរការ'],
+  'Sudah dikirim': ['Delivered', 'បានដឹកជញ្ជូន'],
+}
+
+export function tr(l: Lang, s: string): string {
+  if (l === 'id') return s
+  const e = D[s]
+  return e ? e[l === 'en' ? 0 : 1] : s
+}
+export function useT() {
+  const l = useLang()
+  return (s: string) => tr(l, s)
+}

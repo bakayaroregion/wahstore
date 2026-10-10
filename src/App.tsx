@@ -2,7 +2,8 @@ import { useEffect } from 'react'
 import { Link, Route, Routes } from 'react-router-dom'
 import { supabase, configured } from './supabase'
 import { useBrand, useCart, useSession } from './lib'
-import { Space } from './ui'
+import { Space, LangMenu, ThemeToggle } from './ui'
+import { useT } from './i18n'
 import Store, { Catalog, ProductPage } from './pages/Store'
 import { Cart, Check } from './pages/Cart'
 import { Account, Login, Register } from './pages/Auth'
@@ -23,6 +24,7 @@ function Shell() {
   const n = useCart().reduce((a, i) => a + i.qty, 0)
   const session = useSession()
   const brand = useBrand()
+  const t = useT()
   useEffect(() => { document.title = `${brand.name} - ${brand.tagline}` }, [brand])
   return (
     <>
@@ -30,16 +32,18 @@ function Shell() {
       <header className="top"><div className="wrap bar">
         <Link to="/" className="brand"><Logo url={brand.logo} /><span>{brand.name}<small>{brand.tagline}</small></span></Link>
         <nav>
-          <Link to="/cek">Cek pesanan</Link>
+          <LangMenu />
+          <ThemeToggle />
+          <Link to="/cek">{t('Cek pesanan')}</Link>
           {session ? (
             <>
-              <Link to="/produk">Produk</Link>
-              <Link to="/akun">Akun</Link>
-              <button className="linkbtn" onClick={() => supabase.auth.signOut()}>Keluar</button>
-              <Link to="/keranjang" className="btn sm">Keranjang ({n})</Link>
+              <Link to="/produk">{t('Produk')}</Link>
+              <Link to="/akun">{t('Akun')}</Link>
+              <button className="linkbtn" onClick={() => supabase.auth.signOut()}>{t('Keluar')}</button>
+              <Link to="/keranjang" className="btn sm">{t('Keranjang')} ({n})</Link>
             </>
           ) : session === null ? (
-            <><Link to="/masuk">Masuk</Link><Link to="/daftar" className="btn sm">Daftar</Link></>
+            <><Link to="/masuk">{t('Masuk')}</Link><Link to="/daftar" className="btn sm">{t('Daftar')}</Link></>
           ) : null}
         </nav>
       </div></header>
@@ -54,13 +58,13 @@ function Shell() {
           <Route path="/masuk" element={<Login />} />
           <Route path="/daftar" element={<Register />} />
           <Route path="/akun" element={<Account />} />
-          <Route path="*" element={<p>Halaman tidak ditemukan. <Link to="/">Kembali ke beranda</Link></p>} />
+          <Route path="*" element={<p>{t('Halaman tidak ditemukan.')} <Link to="/">{t('Kembali ke beranda')}</Link></p>} />
         </Routes>
       </main>
       <footer><div className="wrap fcol">
-        <div>© 2026 {brand.name}. Pesanan diproses melalui WhatsApp.</div>
-        <div className="muted">Merek dan logo milik pemiliknya masing-masing. {brand.name} tidak berafiliasi dengan merek yang ditampilkan.</div>
-        <div className="flinks"><Link to="/">Beranda</Link><Link to="/cek">Cek Pesanan</Link><Link to="/akun">Akun</Link></div>
+        <div>© 2026 {brand.name}. {t('Pesanan diproses melalui WhatsApp.')}</div>
+        <div className="muted">{t('Merek dan logo milik pemiliknya masing-masing.')} {brand.name} {t('tidak berafiliasi dengan merek yang ditampilkan.')}</div>
+        <div className="flinks"><Link to="/">{t('Beranda')}</Link><Link to="/cek">{t('Cek Pesanan')}</Link><Link to="/akun">{t('Akun')}</Link></div>
       </div></footer>
     </>
   )
