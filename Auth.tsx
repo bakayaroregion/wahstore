@@ -29,7 +29,7 @@ function AuthPage({ mode }: { mode: 'login' | 'register' }) {
   const nav = useNavigate()
   const t = useT()
   const brand = useBrand()
-  const [f, setF] = useState({ name: '', phone: '', email: '', pw: '' })
+  const [f, setF] = useState({ name: '', phone: '', email: '', pw: '', ref: (() => { try { return localStorage.getItem('ws_ref') || '' } catch { return '' } })() })
   const [show, setShow] = useState(false)
   const [remember, setRemember] = useState(true)
   const [err, setErr] = useState('')
@@ -42,6 +42,7 @@ function AuthPage({ mode }: { mode: 'login' | 'register' }) {
   async function go(e: FormEvent) {
     e.preventDefault(); setErr(''); setInfo(''); setBusy(true)
     if (reg) {
+      try { const rc = f.ref.trim().toUpperCase(); if (/^[A-Z0-9]{3,16}$/.test(rc)) localStorage.setItem('ws_ref', rc); else localStorage.removeItem('ws_ref') } catch { /* abaikan */ }
       const { data, error } = await supabase.auth.signUp({
         email: f.email.trim(), password: f.pw,
         options: { data: { full_name: f.name.trim(), phone: f.phone.trim() }, emailRedirectTo: window.location.origin },
@@ -98,6 +99,7 @@ function AuthPage({ mode }: { mode: 'login' | 'register' }) {
             <form onSubmit={go}>
               {reg && <Field icon="user" label={t('Nama')}><input required minLength={2} maxLength={80} autoComplete="name" placeholder={t('Nama lengkap')} value={f.name} onChange={set('name')} /></Field>}
               {reg && <Field icon="phone" label={t('Nomor WhatsApp (opsional)')}><input inputMode="tel" autoComplete="tel" placeholder="08xxxxxxxxxx" value={f.phone} onChange={set('phone')} /></Field>}
+              {reg && <Field icon="gift" label={t('Kode Referral (opsional)')}><input maxLength={16} placeholder={t('Contoh: ABC123')} value={f.ref} onChange={(e) => setF({ ...f, ref: e.target.value.toUpperCase() })} /></Field>}
               <Field icon="mail" label={t('Email')}><input type="email" required autoComplete="email" placeholder="email@gmail.com" value={f.email} onChange={set('email')} /></Field>
               <Field icon="lock" label={t('Kata sandi')} aside={!reg && <button type="button" className="linkbtn forgot" onClick={forgot}>{t('Lupa kata sandi?')}</button>}>
                 <input type={show ? 'text' : 'password'} required minLength={reg ? 8 : 1} autoComplete={reg ? 'new-password' : 'current-password'} placeholder={reg ? t('Minimal 8 karakter') : '••••••••'} value={f.pw} onChange={set('pw')} />

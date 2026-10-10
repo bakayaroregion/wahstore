@@ -8,6 +8,7 @@ import Store, { Catalog, Favorites, ProductPage } from './pages/Store'
 import { Cart, Check } from './pages/Cart'
 import { Account, Login, Register } from './pages/Auth'
 import Admin from './pages/Admin'
+import { Referral } from './pages/Referral'
 
 function Shell() {
   const cart = useCart()
@@ -18,6 +19,20 @@ function Shell() {
   const session = useSession()
   const brand = useBrand()
   const t = useT()
+  // Simpan kode referral dari link (?ref=KODE), lalu pakai setelah akun masuk.
+  useEffect(() => {
+    try {
+      const r = new URLSearchParams(window.location.search).get('ref')
+      if (r && /^[A-Za-z0-9]{3,16}$/.test(r)) localStorage.setItem('ws_ref', r.toUpperCase())
+    } catch { /* abaikan */ }
+  }, [])
+  useEffect(() => {
+    if (!session) return
+    let c = ''
+    try { c = localStorage.getItem('ws_ref') || '' } catch { /* abaikan */ }
+    if (!c) return
+    supabase.rpc('apply_referral', { p_code: c }).then(() => { try { localStorage.removeItem('ws_ref') } catch { /* abaikan */ } })
+  }, [session])
   useEffect(() => { document.title = `${brand.name} - ${brand.tagline}` }, [brand])
   return (
     <>
@@ -31,7 +46,7 @@ function Shell() {
               <Link to="/keranjang" className="cartpill" aria-label={t('Keranjang')} title={t('Keranjang')}><Icon n="cart" size={16} /> {rupiah(total)}{count > 0 && <b className="cnt">{count}</b>}</Link>
               <LangMenu />
               <ThemeToggle />
-              <Link to="/akun" className="iconbtn" aria-label={t('Diskon pelanggan setia')} title={t('Diskon pelanggan setia')}><Icon n="gift" size={17} /></Link>
+              <Link to="/referral" className="iconbtn" aria-label={t('Program Referral')} title={t('Program Referral')}><Icon n="gift" size={17} /></Link>
               <Link to="/favorit" className="iconbtn" aria-label={t('Favorit')} title={t('Favorit')}><Icon n="heart" size={17} />{favCount > 0 && <b className="cnt">{favCount}</b>}</Link>
               <Link to="/cek" className="iconbtn" aria-label={t('Cek pesanan')} title={t('Cek pesanan')}><Icon n="receipt" size={17} /></Link>
               <Link to="/akun" className="iconbtn" aria-label={t('Akun')} title={t('Akun')}><Icon n="user" size={17} /></Link>
@@ -48,6 +63,7 @@ function Shell() {
           <Route path="/" element={<Store />} />
           <Route path="/produk" element={<Catalog />} />
           <Route path="/produk/:slug" element={<ProductPage />} />
+          <Route path="/referral" element={<Referral />} />
           <Route path="/favorit" element={<Favorites />} />
           <Route path="/keranjang" element={<Cart />} />
           <Route path="/cek" element={<Check />} />

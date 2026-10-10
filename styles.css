@@ -245,3 +245,23 @@ img.av{object-fit:cover;flex:none}
 :root[data-theme=light] .pills .tag{background:rgba(255,255,255,.8);color:var(--tx)}
 :root[data-theme=light] .pills .tag.in{background:rgba(34,197,94,.16);color:#15803d}
 :root[data-theme=light] .pills .tag.out{background:rgba(239,68,68,.14);color:#b91c1c}
+/* halaman referral */
+.refpage{max-width:560px;margin:0 auto;padding:20px 0 40px}
+.step{display:flex;gap:12px;align-items:center;padding:8px 0}
+.stepn{flex:none;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:rgba(124,58,237,.22);color:#a78bfa;font-weight:700;font-size:14px}
+.step.win .stepn{background:rgba(34,197,94,.18);color:var(--ok)}.step.win b{color:var(--ok)}
+.reftitle{display:flex;gap:8px;align-items:center;font-size:22px}
+.refcode{display:flex;justify-content:space-between;align-items:center;margin:14px 0;padding:18px;border-radius:14px;border:1px solid var(--bd);background:rgba(124,58,237,.12);font:800 22px ui-monospace,Menlo,Consolas,monospace;letter-spacing:2px;color:#8b5cf6}
+.lbl{margin:12px 0 6px}
+.reflink{display:flex;gap:10px;align-items:center;width:100%;text-align:left;padding:14px;border-radius:12px;border:1px solid var(--bd);background:rgba(0,0,0,.2);color:var(--tx);font:12px ui-monospace,Menlo,Consolas,monospace;cursor:pointer}
+.reflink span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sharerow{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
+.sh{display:block;text-align:center;padding:10px;border-radius:12px;font-weight:700;font-size:13px;text-decoration:none;border:1px solid}
+.sh.wa{color:#22c55e;border-color:rgba(34,197,94,.4);background:rgba(34,197,94,.1)}
+.sh.x{color:var(--tx);border-color:var(--bd);background:rgba(255,255,255,.05)}
+.sh.fb{color:#60a5fa;border-color:rgba(96,165,250,.4);background:rgba(96,165,250,.1)}
+.refstats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.refstats div{display:flex;flex-direction:column;align-items:center;padding:14px;border-radius:12px;background:rgba(255,255,255,.04)}
+.refstats b{font-size:22px}.refstats span{font-size:12px;color:var(--mu)}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:1px}
+:root[data-theme=light] .refcode{color:#6d28d9}:root[data-theme=light] .reflink{background:rgba(255,255,255,.7)}
