@@ -81,3 +81,14 @@ export function resetEphemeralSession() {
     }
   } catch { /* penyimpanan tidak tersedia */ }
 }
+
+// Favorit disimpan di perangkat pelanggan saja.
+let favs: string[] = read<string[]>('ws_favs', [])
+const favSubs = new Set<() => void>()
+export const favApi = {
+  toggle(id: string) {
+    favs = favs.includes(id) ? favs.filter((x) => x !== id) : [...favs, id].slice(-200)
+    write('ws_favs', favs); favSubs.forEach((f) => f())
+  },
+}
+export const useFavs = () => useSyncExternalStore((cb) => { favSubs.add(cb); return () => { favSubs.delete(cb) } }, () => favs)

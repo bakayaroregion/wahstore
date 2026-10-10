@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { supabase } from '../supabase'
-import { cartApi, Product, rupiah, useSession } from '../lib'
+import { cartApi, favApi, Product, rupiah, useFavs, useSession } from '../lib'
 import { Icon, catIcon } from '../ui'
 import { useT } from '../i18n'
 
@@ -11,10 +11,10 @@ interface Stats { orders_completed: number; customers: number; repeat_pct: numbe
 interface Cat { id: string; name: string; image_url: string | null }
 const DEFAULT_HL = ['Harga tampil jelas sebelum pesanan dibuat', 'Setiap pesanan punya nomor dan kode akses untuk cek status', 'Konfirmasi dan pembayaran langsung lewat WhatsApp', 'Pembayaran diverifikasi admin sebelum pesanan diproses', 'Riwayat status pesanan tercatat']
 
-function Thumb({ p, big }: { p: Product; big?: boolean }) {
+function Thumb({ p, big, sm }: { p: Product; big?: boolean; sm?: boolean }) {
   const [bad, setBad] = useState(false)
-  if (p.logo_url && !bad) return <div className={'ph logo' + (big ? ' big' : '')}><img src={p.logo_url} alt={p.name} loading="lazy" onError={() => setBad(true)} /></div>
-  return <div className={'ph' + (big ? ' big' : '')} aria-hidden="true">{p.name[0]}</div>
+  if (p.logo_url && !bad) return <div className={'ph logo' + (big ? ' big' : '') + (sm ? ' sm' : '')}><img src={p.logo_url} alt={p.name} loading="lazy" onError={() => setBad(true)} /></div>
+  return <div className={'ph' + (big ? ' big' : '') + (sm ? ' sm' : '')} aria-hidden="true">{p.name[0]}</div>
 }
 function Price({ p }: { p: Product }) {
   return <div className="price">{rupiah(p.price)}{p.compare_at_price && p.compare_at_price > p.price && <s>{rupiah(p.compare_at_price)}</s>}</div>
@@ -185,50 +185,98 @@ export function ProductPage() {
   )
 }
 
-export function Catalog() {
-  const session = useSession()
+function ProductCard({ p }: { p: Product }) {
   const t = useT()
-  const [params, setParams] = useSearchParams()
+  const favs = useFavs()
+  const fav = favs.includes(p.id)
+  const [copied, setCopied] = useState(false)
+  async function share() {
+    const url = `${window.location.origin}/produk/${p.slug}`
+    try {
+      if (navigator.share) await navigator.share({ title: p.name, url })
+      else { await navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 1500) }
+    } catch { /* dibatalkan */ }
+  }
+  return (
+    <article className="pcard">
+      <div className="phead">
+        <Thumb p={p} sm />
+        <div className="pname"><h3 title={p.name}><Link to={`/produk/${p.slug}`}>{p.name}</Link></h3><div className="muted">{p.categories?.name}</div></div>
+        <div className="pact">
+          <button className="miniic" aria-label={t('Bagikan')} title={copied ? t('Tautan tersalin') : t('Bagikan')} onClick={share}><Icon n={copied ? 'check' : 'share'} size={15} /></button>
+          <button className={'miniic' + (fav ? ' on' : '')} aria-pressed={fav} aria-label={fav ? t('Hapus dari favorit') : t('Tambah ke favorit')} title={fav ? t('Hapus dari favorit') : t('Tambah ke favorit')} onClick={() => favApi.toggle(p.id)}><Icon n="heart" size={15} /></button>
+        </div>
+      </div>
+      {p.short_description && <p className="pdesc">{p.short_description}</p>}
+      <div className="tags">{p.labels?.map((l) => <span className="tag" key={l}>{l}</span>)}</div>
+      <div className="pfoot">
+        <div className="price"><span className="g">{rupiah(p.price)}</span>{p.compare_at_price && p.compare_at_price > p.price && <s>{rupiah(p.compare_at_price)}</s>}</div>
+        <button className="btn sm" onClick={() => cartApi.add(p)}><Icon n="cart" size={14} /> {t('Beli')}</button>
+      </div>
+    </article>
+  )
+}
+
+function useProducts(session: unknown) {
+  const t = useT()
   const [list, setList] = useState<Product[] | null>(null)
-  const [cats, setCats] = useState<Cat[]>([])
-  const [q, setQ] = useState('')
   const [err, setErr] = useState('')
-  const cat = params.get('cat') ?? ''
-  useEffect(() => { supabase.from('categories').select('id,name,image_url').order('sort_order').then(({ data }) => setCats((data ?? []) as Cat[])) }, [])
   useEffect(() => {
     if (!session) { setList(null); return }
     supabase.from('products').select(SEL).order('created_at', { ascending: false }).then(({ data, error }) => {
       if (error) setErr(t('Produk gagal dimuat. Muat ulang halaman.')); else setList(data as unknown as Product[])
     })
   }, [session])
-  const shown = useMemo(() => (list ?? []).filter((p) => (!cat || p.category_id === cat) && p.name.toLowerCase().includes(q.toLowerCase())), [list, cat, q])
+  return { list, err }
+}
+
+export function Catalog() {
+  const session = useSession()
+  const t = useT()
+  const [params, setParams] = useSearchParams()
+  const [cats, setCats] = useState<Cat[]>([])
+  const [q, setQ] = useState('')
+  const { list, err } = useProducts(session)
+  const cat = params.get('cat') ?? ''
+  useEffect(() => { supabase.from('categories').select('id,name,image_url').order('sort_order').then(({ data }) => setCats((data ?? []) as Cat[])) }, [])
+  const shown = useMemo(() => (list ?? []).filter((p) => {
+    if (cat === 'sale' ? !(p.compare_at_price && p.compare_at_price > p.price) : (cat && p.category_id !== cat)) return false
+    return p.name.toLowerCase().includes(q.toLowerCase())
+  }), [list, cat, q])
   if (session === undefined) return <p className="muted">{t('Memuat...')}</p>
   if (!session) return <section className="sec"><Gate /></section>
   return (
-    <section className="sec">
-      <h1 className="h2c">{t('Semua')} <span className="g">{t('Produk')}</span></h1>
-      <div className="tools">
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('Cari produk')} aria-label={t('Cari produk')} />
-        <div className="chips">
-          <button className="chip" aria-pressed={!cat} onClick={() => setParams({})}>{t('Semua')}</button>
-          {cats.map((c) => <button key={c.id} className="chip" aria-pressed={cat === c.id} onClick={() => setParams({ cat: c.id })}>{c.name}</button>)}
-        </div>
+    <section className="catalog">
+      <h1 className="cattitle">{t('Katalog Produk')}</h1>
+      <div className="searchbox"><span className="fldic"><Icon n="search" size={17} /></span><input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('Cari produk')} aria-label={t('Cari produk')} /></div>
+      <div className="chips scrollchips">
+        <button className="chip" aria-pressed={!cat} onClick={() => setParams({})}>{t('Semua')}</button>
+        <button className="chip" aria-pressed={cat === 'sale'} onClick={() => setParams({ cat: 'sale' })}><Icon n="percent" size={14} /> {t('Diskon')}</button>
+        {cats.map((c) => <button key={c.id} className="chip" aria-pressed={cat === c.id} onClick={() => setParams({ cat: c.id })}><Icon n={catIcon(c.name)} size={14} /> {c.name}</button>)}
       </div>
       {err && <p className="err">{err}</p>}
       {!list && !err && <p className="muted">{t('Memuat produk...')}</p>}
       {list && shown.length === 0 && <p className="muted">{t('Belum ada produk yang cocok. Coba kata kunci atau kategori lain.')}</p>}
-      <div className="grid">
-        {shown.map((p) => (
-          <article className="card" key={p.id}>
-            <Thumb p={p} />
-            <div className="tags">{p.labels?.map((l) => <span className="tag" key={l}>{l}</span>)}</div>
-            <h3><Link to={`/produk/${p.slug}`}>{p.name}</Link></h3>
-            <div className="muted">{p.categories?.name}</div>
-            <Price p={p} />
-            <div className="row"><Link className="btn ghost sm" to={`/produk/${p.slug}`}>{t('Detail')}</Link><button className="btn sm" onClick={() => cartApi.add(p)}>{t('Beli')}</button></div>
-          </article>
-        ))}
-      </div>
+      <div className="pgrid">{shown.map((p) => <ProductCard p={p} key={p.id} />)}</div>
+    </section>
+  )
+}
+
+export function Favorites() {
+  const session = useSession()
+  const t = useT()
+  const favs = useFavs()
+  const { list, err } = useProducts(session)
+  if (session === undefined) return <p className="muted">{t('Memuat...')}</p>
+  if (!session) return <section className="sec"><Gate /></section>
+  const shown = (list ?? []).filter((p) => favs.includes(p.id))
+  return (
+    <section className="catalog">
+      <h1 className="cattitle">{t('Favorit Saya')}</h1>
+      {err && <p className="err">{err}</p>}
+      {!list && !err && <p className="muted">{t('Memuat produk...')}</p>}
+      {list && shown.length === 0 && <p className="muted">{t('Belum ada favorit. Tekan ikon hati pada produk untuk menyimpannya.')} <Link to="/produk">{t('Lihat produk')}</Link></p>}
+      <div className="pgrid">{shown.map((p) => <ProductCard p={p} key={p.id} />)}</div>
     </section>
   )
 }

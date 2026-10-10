@@ -1,16 +1,20 @@
 import { useEffect } from 'react'
-import { Link, Route, Routes } from 'react-router-dom'
+import { Link, Route, Routes, useLocation } from 'react-router-dom'
 import { supabase, configured } from './supabase'
-import { useBrand, useCart, useSession } from './lib'
-import { Space, LangMenu, ThemeToggle, Logo } from './ui'
+import { rupiah, useBrand, useCart, useFavs, useSession } from './lib'
+import { Space, LangMenu, ThemeToggle, Logo, Icon } from './ui'
 import { useT } from './i18n'
-import Store, { Catalog, ProductPage } from './pages/Store'
+import Store, { Catalog, Favorites, ProductPage } from './pages/Store'
 import { Cart, Check } from './pages/Cart'
 import { Account, Login, Register } from './pages/Auth'
 import Admin from './pages/Admin'
 
 function Shell() {
-  const n = useCart().reduce((a, i) => a + i.qty, 0)
+  const cart = useCart()
+  const total = cart.reduce((a, i) => a + i.price * i.qty, 0)
+  const count = cart.reduce((a, i) => a + i.qty, 0)
+  const favCount = useFavs().length
+  const wide = useLocation().pathname === '/produk' || useLocation().pathname === '/favorit'
   const session = useSession()
   const brand = useBrand()
   const t = useT()
@@ -18,18 +22,20 @@ function Shell() {
   return (
     <>
       <Space />
-      <header className="top"><div className="wrap bar">
+      <header className="top"><div className={'wrap bar' + (wide ? ' wide' : '')}>
         <Link to="/" className="brand"><Logo url={brand.logo} /><span>{brand.name}<small>{brand.tagline}</small></span></Link>
         <nav>
-          <LangMenu />
-          <ThemeToggle />
+          {!session && <><LangMenu /><ThemeToggle /></>}
           {session ? (
             <>
-              <Link to="/cek">{t('Cek pesanan')}</Link>
-              <Link to="/produk">{t('Produk')}</Link>
-              <Link to="/akun">{t('Akun')}</Link>
-              <button className="linkbtn" onClick={() => supabase.auth.signOut()}>{t('Keluar')}</button>
-              <Link to="/keranjang" className="btn sm">{t('Keranjang')} ({n})</Link>
+              <Link to="/keranjang" className="cartpill" aria-label={t('Keranjang')} title={t('Keranjang')}><Icon n="cart" size={16} /> {rupiah(total)}{count > 0 && <b className="cnt">{count}</b>}</Link>
+              <LangMenu />
+              <ThemeToggle />
+              <Link to="/akun" className="iconbtn" aria-label={t('Diskon pelanggan setia')} title={t('Diskon pelanggan setia')}><Icon n="gift" size={17} /></Link>
+              <Link to="/favorit" className="iconbtn" aria-label={t('Favorit')} title={t('Favorit')}><Icon n="heart" size={17} />{favCount > 0 && <b className="cnt">{favCount}</b>}</Link>
+              <Link to="/cek" className="iconbtn" aria-label={t('Cek pesanan')} title={t('Cek pesanan')}><Icon n="receipt" size={17} /></Link>
+              <Link to="/akun" className="iconbtn" aria-label={t('Akun')} title={t('Akun')}><Icon n="user" size={17} /></Link>
+              <button className="iconbtn" aria-label={t('Keluar')} title={t('Keluar')} onClick={() => supabase.auth.signOut()}><Icon n="logout" size={17} /></button>
             </>
           ) : session === null ? (
             <><Link to="/masuk">{t('Masuk')}</Link><Link to="/daftar" className="btn sm">{t('Daftar')}</Link></>
@@ -37,11 +43,12 @@ function Shell() {
         </nav>
       </div></header>
       {!configured && <div className="warn">Supabase belum dikonfigurasi. Isi VITE_SUPABASE_URL dan VITE_SUPABASE_ANON_KEY.</div>}
-      <main className="wrap">
+      <main className={'wrap' + (wide ? ' wide' : '')}>
         <Routes>
           <Route path="/" element={<Store />} />
           <Route path="/produk" element={<Catalog />} />
           <Route path="/produk/:slug" element={<ProductPage />} />
+          <Route path="/favorit" element={<Favorites />} />
           <Route path="/keranjang" element={<Cart />} />
           <Route path="/cek" element={<Check />} />
           <Route path="/masuk" element={<Login />} />
