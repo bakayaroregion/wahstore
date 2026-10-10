@@ -108,6 +108,13 @@ const D: Record<string, [string, string]> = {
   'Detail': ['Details', 'ព័ត៌មានលម្អិត'],
   'Beli': ['Buy', 'ទិញ'],
   // auth
+  'Kelola profil, diskon, dan pesanan Anda': ['Manage your profile, discounts, and orders', 'គ្រប់គ្រងប្រូហ្វាល ការបញ្ចុះតម្លៃ និងការបញ្ជាទិញរបស់អ្នក'],
+  'Pelanggan': ['Customer', 'អតិថិជន'],
+  'Rangkaian Anda': ['Your streak', 'ខែជាប់គ្នារបស់អ្នក'],
+  'bulan': ['months', 'ខែ'],
+  'Diskon saat ini': ['Current discount', 'ការបញ្ចុះតម្លៃបច្ចុប្បន្ន'],
+  'bulan berturut-turut': ['months in a row', 'ខែជាប់គ្នា'],
+  'hemat loyalitas': ['loyalty savings', 'សន្សំពីភាពស្មោះត្រង់'],
   'Program Referral': ['Referral Program', 'កម្មវិធីណែនាំមិត្ត'],
   'Ajak teman daftar & belanja': ['Invite friends to register & shop', 'ជូនមិត្តភក្តិចុះឈ្មោះ និងទិញ'],
   'dapatkan kupon diskon': ['get a discount coupon of', 'ទទួលបានគូប៉ុងបញ្ចុះតម្លៃ'],

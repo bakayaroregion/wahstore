@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { supabase } from '../supabase'
 import { useSession } from '../lib'
-import { Icon } from '../ui'
+import { Icon, PageBar } from '../ui'
 import { useT } from '../i18n'
 
 interface Info { code: string; pending: number; success: number; required: number; percent: number; coupons: { code: string; percent: number; used: boolean; expires_at: string | null }[] }
@@ -40,6 +40,7 @@ export function Referral() {
 
   return (
     <section className="refpage">
+      <PageBar icon="gift" title="Referral" />
       <h1 className="h2c">{t('Program Referral')}</h1>
       <p className="sub">{t('Ajak teman daftar & belanja')} {req}x, {t('dapatkan kupon diskon')} {pct}%!</p>
 

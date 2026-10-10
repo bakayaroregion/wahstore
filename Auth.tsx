@@ -2,7 +2,7 @@ import { FormEvent, useEffect, useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
 import { rupiah, STATUS, useBrand, useSession } from '../lib'
-import { Icon, Logo, type IconName } from '../ui'
+import { Icon, Logo, PageBar, type IconName } from '../ui'
 import { useT } from '../i18n'
 
 function GoogleG() {
@@ -156,33 +156,51 @@ export function Account() {
     setMsg(error ? t('Gagal') + ': ' + error.message : t('Kata sandi diperbarui.')); if (!error) setPw('')
   }
   const name = String(session.user.user_metadata?.full_name ?? '')
+  const initial = (name || session.user.email || '?').trim()[0].toUpperCase()
   return (
-    <>
-      <section className="box"><h1>{t('Akun saya')}</h1><p>{name && <b>{name} · </b>}{session.user.email}</p></section>
-      <section className="box">
-        <h2>{t('Diskon pelanggan setia')}</h2>
-        <p>{t('Belanja setiap bulan dan diskon naik. Pesanan yang selesai pada bulan-bulan berturut-turut dihitung sampai bulan lalu.')}</p>
-        {loy && <p className="ok">Rangkaian Anda: {loy.streak} bulan. Diskon saat ini: {loy.percent}%.</p>}
-        {tiers.length > 0 && <ul>{tiers.map((t) => <li key={t.months}>{t.months} bulan berturut-turut: diskon {t.percent}%</li>)}</ul>}
-      </section>
-      <section className="box">
-        <h2>{t('Pesanan saya')}</h2>
+    <section className="refpage">
+      <PageBar icon="user" title={t('Akun')} />
+      <h1 className="h2c">{t('Akun saya')}</h1>
+      <p className="sub">{t('Kelola profil, diskon, dan pesanan Anda')}</p>
+
+      <div className="box profile">
+        <span className="avatar">{initial}</span>
+        <div><b>{name || t('Pelanggan')}</b><div className="muted">{session.user.email}</div></div>
+      </div>
+
+      <div className="box">
+        <h3>{t('Diskon pelanggan setia')}</h3>
+        <p className="muted">{t('Belanja setiap bulan dan diskon naik. Pesanan yang selesai pada bulan-bulan berturut-turut dihitung sampai bulan lalu.')}</p>
+        {loy && <p className="ok">{t('Rangkaian Anda')}: {loy.streak} {t('bulan')}. {t('Diskon saat ini')}: {loy.percent}%.</p>}
+        {tiers.map((x) => (
+          <div className={'step' + (loy && loy.streak >= x.months ? ' win' : '')} key={x.months}>
+            <span className="stepn">{loy && loy.streak >= x.months ? <Icon n="check" size={16} /> : x.months}</span>
+            <div><b>{x.months} {t('bulan berturut-turut')}</b><div className="muted">{t('Diskon')} {x.percent}%</div></div>
+          </div>
+        ))}
+        <Link className="btn ghost wide refbtn" to="/referral"><Icon n="gift" size={15} /> {t('Program Referral')}</Link>
+      </div>
+
+      <div className="box">
+        <h3>{t('Pesanan saya')}</h3>
         {orders === null && <p className="muted">{t('Memuat...')}</p>}
         {orders?.length === 0 && <p className="muted">{t('Belum ada pesanan.')} <Link to="/produk">{t('Lihat produk')}</Link></p>}
         {orders?.map((o) => (
           <div className="line" key={o.order_number}>
             <div><b>{o.order_number}</b><div className="muted">{new Date(o.created_at).toLocaleString('id-ID')} · {o.items.map((i) => `${i.name} x${i.qty}`).join(', ')}</div>
-              <div>{t(STATUS[o.order_status])} · {t(STATUS[o.payment_status])} · {t(STATUS[o.fulfillment_status])}</div>{o.public_note && <div className="muted">Catatan admin: {o.public_note}</div>}</div>
-            <div><b>{rupiah(o.grand_total)}</b>{o.loyalty_discount > 0 && <div className="muted">hemat loyalitas {rupiah(o.loyalty_discount)}</div>}</div>
+              <div className="muted">{t(STATUS[o.order_status])} · {t(STATUS[o.payment_status])} · {t(STATUS[o.fulfillment_status])}</div>{o.public_note && <div className="muted">{t('Catatan admin:')} {o.public_note}</div>}</div>
+            <div><b>{rupiah(o.grand_total)}</b>{o.loyalty_discount > 0 && <div className="muted">{t('hemat loyalitas')} {rupiah(o.loyalty_discount)}</div>}</div>
           </div>
         ))}
-      </section>
+      </div>
+
       <form className="box" onSubmit={changePw}>
-        <h2>{t('Ubah kata sandi')}</h2>
+        <h3>{t('Ubah kata sandi')}</h3>
         <label>{t('Kata sandi baru (min. 8 karakter)')}<input type="password" minLength={8} required autoComplete="new-password" value={pw} onChange={(e) => setPw(e.target.value)} /></label>
         {msg && <p role="status">{msg}</p>}
         <button className="btn">{t('Simpan')}</button>
       </form>
-    </>
+      <div className="c"><Link className="btn ghost" to="/produk">{t('Kembali ke Katalog')}</Link></div>
+    </section>
   )
 }
