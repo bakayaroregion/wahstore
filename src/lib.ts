@@ -48,15 +48,24 @@ export function useSession() {
   return s
 }
 
-export interface Brand { name: string; tagline: string; logo: string }
+export interface Brand { name: string; tagline: string; logo: string; favicon: string }
+function applyFavicon(url: string) {
+  if (!url) return
+  for (const rel of ['icon', 'apple-touch-icon']) {
+    let l = document.querySelector<HTMLLinkElement>(`link[rel="${rel}"]`)
+    if (!l) { l = document.createElement('link'); l.rel = rel; document.head.appendChild(l) }
+    l.href = url
+  }
+}
 let brandCache: Brand | null = null
 export function useBrand() {
-  const [b, setB] = useState<Brand>(brandCache ?? { name: 'WAHYU STORE', tagline: 'Toko Produk Digital', logo: '' })
+  const [b, setB] = useState<Brand>(brandCache ?? { name: 'WAHYU STORE', tagline: 'Toko Produk Digital', logo: '', favicon: '' })
   useEffect(() => {
-    supabase.from('store_settings').select('key,value').in('key', ['brand_name', 'brand_tagline', 'brand_logo_url']).then(({ data }) => {
+    supabase.from('store_settings').select('key,value').in('key', ['brand_name', 'brand_tagline', 'brand_logo_url', 'brand_favicon_url']).then(({ data }) => {
       const m: Record<string, string> = {}
       ;(data ?? []).forEach((r) => { m[r.key] = String(r.value ?? '') })
-      const nb = { name: m.brand_name || 'WAHYU STORE', tagline: m.brand_tagline || 'Toko Produk Digital', logo: m.brand_logo_url || '' }
+      const nb = { name: m.brand_name || 'WAHYU STORE', tagline: m.brand_tagline || 'Toko Produk Digital', logo: m.brand_logo_url || '', favicon: m.brand_favicon_url || '' }
+      applyFavicon(nb.favicon)
       brandCache = nb; setB(nb)
     })
   }, [])

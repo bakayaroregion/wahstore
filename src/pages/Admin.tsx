@@ -384,17 +384,19 @@ function ShopSettings() {
   const [name, setName] = useState('')
   const [tagline, setTagline] = useState('')
   const [logo, setLogo] = useState('')
+  const [fav, setFav] = useState('')
   const [tiers, setTiers] = useState('')
   const [sc, setSc] = useState('')
   const [sr, setSr] = useState('')
   const [sp, setSp] = useState('')
   const [msg, setMsg] = useState('')
   useEffect(() => {
-    supabase.from('store_settings').select('key,value').in('key', ['brand_name', 'brand_tagline', 'brand_logo_url', 'loyalty_tiers', 'stat_customers', 'stat_rating', 'stat_repeat']).then(({ data }) => {
+    supabase.from('store_settings').select('key,value').in('key', ['brand_name', 'brand_tagline', 'brand_logo_url', 'brand_favicon_url', 'loyalty_tiers', 'stat_customers', 'stat_rating', 'stat_repeat']).then(({ data }) => {
       ;(data ?? []).forEach((r) => {
         if (r.key === 'brand_name') setName(String(r.value ?? ''))
         if (r.key === 'brand_tagline') setTagline(String(r.value ?? ''))
         if (r.key === 'brand_logo_url') setLogo(String(r.value ?? ''))
+        if (r.key === 'brand_favicon_url') setFav(String(r.value ?? ''))
         if (r.key === 'stat_customers') setSc(String(r.value ?? ''))
         if (r.key === 'stat_rating') setSr(String(r.value ?? ''))
         if (r.key === 'stat_repeat') setSp(String(r.value ?? ''))
@@ -414,6 +416,7 @@ function ShopSettings() {
       { key: 'brand_name', value: name.trim() || 'WAHYU STORE', is_public: true },
       { key: 'brand_tagline', value: tagline.trim(), is_public: true },
       { key: 'brand_logo_url', value: logo, is_public: true },
+      { key: 'brand_favicon_url', value: fav, is_public: true },
       { key: 'loyalty_tiers', value: parsed, is_public: true },
       { key: 'stat_customers', value: sc.trim().slice(0, 12), is_public: true },
       { key: 'stat_rating', value: sr.trim().slice(0, 12), is_public: true },
@@ -427,6 +430,7 @@ function ShopSettings() {
       <label>Nama brand<input value={name} maxLength={40} onChange={(e) => setName(e.target.value)} /></label>
       <label>Slogan singkat<input value={tagline} maxLength={60} onChange={(e) => setTagline(e.target.value)} /></label>
       <PhotoField label="Logo brand (persegi, tampil di header)" value={logo} onChange={setLogo} folder="brand" />
+      <PhotoField label="Favicon (ikon kecil di tab browser, persegi, minimal 128x128 px, PNG disarankan)" value={fav} onChange={setFav} folder="brand" />
       <label>Tingkat diskon loyalitas (satu per baris, format bulan:persen)
         <textarea rows={4} value={tiers} onChange={(e) => setTiers(e.target.value)} placeholder={'2:3\n3:5\n6:10'} /></label>
       <p className="muted">Contoh 3:5 artinya pelanggan yang punya pesanan selesai 3 bulan berturut-turut (sampai bulan lalu) mendapat diskon 5% pada pesanan berikutnya. Isi sesuai kemampuan Anda, diskon dihitung otomatis oleh server.</p>
