@@ -17,7 +17,7 @@ const mask = (p: string) => p.length > 6 ? p.slice(0, 4) + '****' + p.slice(-2) 
 export default function Admin() {
   const [sess, setSess] = useState<Session | null | undefined>(undefined)
   const [roles, setRoles] = useState<string[] | null>(null)
-  const [tab, setTab] = useState<'dash' | 'orders' | 'products' | 'categories' | 'reviews' | 'content'>('dash')
+  const [tab, setTab] = useState<'dash' | 'orders' | 'products' | 'categories' | 'reviews' | 'customers' | 'content'>('dash')
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSess(data.session))
     const { data } = supabase.auth.onAuthStateChange((_e, s) => setSess(s))
@@ -44,6 +44,7 @@ export default function Admin() {
         {manage && <button className="chip" aria-pressed={tab === 'products'} onClick={() => setTab('products')}>Produk</button>}
         {manage && <button className="chip" aria-pressed={tab === 'categories'} onClick={() => setTab('categories')}>Kategori</button>}
         {manage && <button className="chip" aria-pressed={tab === 'reviews'} onClick={() => setTab('reviews')}>Testimoni</button>}
+        {manage && <button className="chip" aria-pressed={tab === 'customers'} onClick={() => setTab('customers')}>Pelanggan</button>}
         {manage && <button className="chip" aria-pressed={tab === 'content'} onClick={() => setTab('content')}>Konten</button>}
       </nav>
       {tab === 'dash' && <Orders ops={ops} summaryOnly />}
@@ -51,6 +52,7 @@ export default function Admin() {
       {tab === 'products' && manage && <Products />}
       {tab === 'categories' && manage && <Categories />}
       {tab === 'reviews' && manage && <Content part="reviews" />}
+      {tab === 'customers' && manage && <Customers />}
       {tab === 'content' && manage && <Content part="settings" />}
     </div>
   )
@@ -442,5 +444,48 @@ function ShopSettings() {
       {msg && <p role="status">{msg}</p>}
       <button className="btn">Simpan</button>
     </form>
+  )
+}
+
+interface Cust { id: string; email: string; full_name: string; phone: string; created_at: string; last_sign_in_at: string | null; email_confirmed: boolean; orders_total: number; orders_completed: number }
+function Customers() {
+  const [rows, setRows] = useState<Cust[] | null>(null)
+  const [q, setQ] = useState('')
+  const [err, setErr] = useState('')
+  useEffect(() => {
+    supabase.rpc('admin_customers').then(({ data, error }) => {
+      if (error) setErr('Gagal memuat: ' + error.message + ' (pastikan 0008_admin_customers.sql sudah dijalankan)')
+      else setRows((data ?? []) as Cust[])
+    })
+  }, [])
+  const fmt = (d: string | null) => (d ? new Date(d).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : '-')
+  const list = (rows ?? []).filter((r) => `${r.email} ${r.full_name} ${r.phone}`.toLowerCase().includes(q.trim().toLowerCase()))
+  return (
+    <div>
+      <h2>Akun pelanggan terdaftar{rows ? ` (${rows.length})` : ''}</h2>
+      <input placeholder="Cari nama, email, atau nomor WhatsApp" value={q} onChange={(e) => setQ(e.target.value)} />
+      {err && <p role="alert" className="err">{err}</p>}
+      {!rows && !err && <p className="muted">Memuat...</p>}
+      {rows && (
+        <div className="tw"><table>
+          <thead><tr><th>Nama</th><th>Email</th><th>WhatsApp</th><th>Daftar</th><th>Terakhir masuk</th><th>Pesanan</th><th>Selesai</th></tr></thead>
+          <tbody>
+            {list.map((r) => (
+              <tr key={r.id}>
+                <td>{r.full_name || '-'}</td>
+                <td>{r.email}{!r.email_confirmed && <span className="muted"> (belum verifikasi)</span>}</td>
+                <td>{r.phone || '-'}</td>
+                <td>{fmt(r.created_at)}</td>
+                <td>{fmt(r.last_sign_in_at)}</td>
+                <td>{r.orders_total}</td>
+                <td>{r.orders_completed}</td>
+              </tr>
+            ))}
+            {list.length === 0 && <tr><td colSpan={7} className="muted">Belum ada akun.</td></tr>}
+          </tbody>
+        </table></div>
+      )}
+      <p className="muted">Data pribadi pelanggan, hanya tampil untuk admin. Jangan dibagikan ke pihak lain.</p>
+    </div>
   )
 }
