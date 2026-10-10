@@ -2,23 +2,12 @@ import { useEffect } from 'react'
 import { Link, Route, Routes } from 'react-router-dom'
 import { supabase, configured } from './supabase'
 import { useBrand, useCart, useSession } from './lib'
-import { Space, LangMenu, ThemeToggle } from './ui'
+import { Space, LangMenu, ThemeToggle, Logo } from './ui'
 import { useT } from './i18n'
 import Store, { Catalog, ProductPage } from './pages/Store'
 import { Cart, Check } from './pages/Cart'
 import { Account, Login, Register } from './pages/Auth'
 import Admin from './pages/Admin'
-
-function Logo({ url }: { url: string }) {
-  if (url) return <img src={url} alt="" width="34" height="34" style={{ borderRadius: 10, objectFit: 'cover' }} />
-  return (
-    <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true">
-      <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#8b5cf6" /><stop offset="1" stopColor="#0ea5e9" /></linearGradient></defs>
-      <rect width="34" height="34" rx="10" fill="url(#lg)" />
-      <path d="M8 11l3.5 12L17 14l5.5 9L26 11" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
-}
 
 function Shell() {
   const n = useCart().reduce((a, i) => a + i.qty, 0)

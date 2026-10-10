@@ -71,3 +71,13 @@ export function useBrand() {
   }, [])
   return b
 }
+
+// Jika pelanggan masuk tanpa "Ingat saya", keluarkan sesi saat browser dibuka kembali.
+export function resetEphemeralSession() {
+  try {
+    if (localStorage.getItem('ws_ephemeral') === '1' && !sessionStorage.getItem('ws_alive')) {
+      localStorage.removeItem('ws_ephemeral')
+      supabase.auth.signOut()
+    }
+  } catch { /* penyimpanan tidak tersedia */ }
+}
