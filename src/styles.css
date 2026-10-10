@@ -286,3 +286,25 @@ img.av{object-fit:cover;flex:none}
 .refbadge{display:inline-grid;place-items:center;width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#0ea5e9);color:#fff}
 .refbar b{font-size:17px}
 .refpage h1{font-size:24px}
+/* checkout */
+.checkout{max-width:640px;margin:0 auto;padding:10px 0 40px}
+.cohead{font-size:clamp(28px,5vw,38px);margin:10px 0 16px}
+.coitem{display:flex;gap:14px;align-items:flex-start;padding:12px 0}
+.cotile{flex:none;width:60px;height:60px;border-radius:16px;display:grid;place-items:center;background:linear-gradient(135deg,#7c3aed,#0ea5e9);color:#fff}
+.cotile.white{background:#fff}.cotile img{max-width:80%;max-height:80%;object-fit:contain}
+.coinfo{flex:1;min-width:0}.coinfo b{font-size:16px}.coinfo .tags{margin-top:8px}
+.coqty{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.coqty .row{gap:6px}
+.cototal{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:10px;padding-top:16px;border-top:1px solid var(--bd);color:var(--mu)}
+.cototal b{font-size:clamp(24px,5vw,30px);font-weight:800}
+.cotitle{display:flex;gap:10px;align-items:center}
+.paymethod{position:relative;padding:16px;border-radius:14px;border:1px solid #8b5cf6;background:rgba(124,58,237,.14);display:flex;flex-direction:column;gap:4px;margin:12px 0}
+.paymethod b{display:flex;gap:8px;align-items:center}
+.paybadge{position:absolute;top:-1px;right:12px;background:#7c3aed;color:#fff;font-size:10px;font-weight:800;padding:3px 10px;border-radius:0 0 10px 10px;letter-spacing:.5px}
+.paysum{padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.04)}
+.paysum .line:last-child{border-bottom:0}
+.couponrow{display:flex;gap:10px}.couponrow input{flex:1;min-height:46px}
+.paybtn{margin-top:14px;min-height:56px;font-size:17px}
+.checkout .chk{margin-top:6px}
+:root[data-theme=light] .paymethod{background:rgba(124,58,237,.08)}:root[data-theme=light] .paysum{background:rgba(255,255,255,.7)}
+@media(max-width:480px){.coitem{flex-wrap:wrap}.coqty{flex-direction:row;align-items:center;width:100%;justify-content:space-between}}

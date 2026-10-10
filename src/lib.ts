@@ -10,7 +10,7 @@ export interface Product {
   price: number; compare_at_price: number | null; labels: string[]; category_id: string | null
   categories?: { name: string } | null; logo_url?: string | null
 }
-export interface CartItem { product_id: string; name: string; price: number; qty: number }
+export interface CartItem { product_id: string; name: string; price: number; qty: number; logo_url?: string | null; desc?: string | null; labels?: string[] }
 
 export const STATUS: Record<string, string> = {
   PENDING: 'Menunggu konfirmasi', CONFIRMED: 'Dikonfirmasi', COMPLETED: 'Selesai', CANCELLED: 'Dibatalkan',
@@ -29,7 +29,7 @@ function set(c: CartItem[]) { cart = c; write('ws_cart', c); subs.forEach((f) =>
 export const cartApi = {
   add(p: Product) {
     const ex = cart.find((i) => i.product_id === p.id)
-    set(ex ? cart.map((i) => i === ex ? { ...i, qty: Math.min(i.qty + 1, 100) } : i) : [...cart, { product_id: p.id, name: p.name, price: p.price, qty: 1 }])
+    set(ex ? cart.map((i) => i === ex ? { ...i, qty: Math.min(i.qty + 1, 100) } : i) : [...cart, { product_id: p.id, name: p.name, price: p.price, qty: 1, logo_url: p.logo_url ?? null, desc: p.short_description ?? null, labels: p.labels ?? [] }])
   },
   setQty(id: string, qty: number) { set(cart.map((i) => i.product_id === id ? { ...i, qty: Math.max(1, Math.min(qty, 100)) } : i)) },
   remove(id: string) { set(cart.filter((i) => i.product_id !== id)) },

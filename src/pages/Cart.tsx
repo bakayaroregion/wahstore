@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { supabase } from '../supabase'
 import { cartApi, read, rupiah, STATUS, useCart, useSession, write } from '../lib'
 import { useT } from '../i18n'
+import { Icon } from '../ui'
 
 interface Done { order_number: string; access_token: string; grand_total: number; wa_url: string | null; warning: string | null }
 interface Saved { order_number: string; token: string }
@@ -27,6 +28,9 @@ export function Cart() {
   const [busy, setBusy] = useState(false)
   const [done, setDone] = useState<Done | null>(null)
   const [copied, setCopied] = useState(false)
+  const [applied, setApplied] = useState<{ code: string; discount: number } | null>(null)
+  const [cErr, setCErr] = useState('')
+  const [cBusy, setCBusy] = useState(false)
   const sub = cart.reduce((a, i) => a + i.price * i.qty, 0)
 
   async function submit(e: FormEvent) {
@@ -64,36 +68,99 @@ export function Cart() {
 
   if (cart.length === 0) return <section className="box"><h1>{t('Keranjang kosong')}</h1><p>{t('Pilih produk dulu.')} <Link to="/produk">{t('Lihat produk')}</Link></p></section>
 
+  const couponDisc = applied ? applied.discount : 0
+  const loyDisc = Math.floor((sub - couponDisc) * loy / 100)
+  const total = Math.max(0, sub - couponDisc - loyDisc)
+
+  async function applyCoupon() {
+    const code = f.coupon.trim()
+    if (!code) return
+    setCErr(''); setCBusy(true)
+    const { data, error } = await supabase.rpc('check_coupon', { p_code: code, p_subtotal: sub })
+    setCBusy(false)
+    if (error || !data) { setCErr(t('Kupon gagal dicek. Coba lagi.')); return }
+    const r = data as { ok: boolean; reason?: string; discount?: number; min?: number }
+    if (!r.ok) {
+      setApplied(null)
+      setCErr(r.reason === 'EXHAUSTED' ? t('Kupon sudah habis dipakai.') : r.reason === 'MIN_PURCHASE' ? `${t('Belanja minimal')} ${rupiah(r.min ?? 0)} ${t('untuk kupon ini.')}` : t('Kode kupon tidak valid atau sudah kedaluwarsa.'))
+      return
+    }
+    setApplied({ code, discount: Number(r.discount) })
+  }
+  useEffect(() => { if (applied) applyCoupon() }, [sub])
+
   return (
-    <div className="two">
-      <section className="box"><h1>{t('Keranjang')}</h1>
+    <form className="checkout" onSubmit={submit}>
+      <h1 className="cohead">{t('Checkout Pesanan')}</h1>
+
+      <section className="box">
+        <h3>{t('Detail Pesanan')}</h3>
         {cart.map((i) => (
-          <div className="line" key={i.product_id}>
-            <div><b>{i.name}</b><div className="muted">{rupiah(i.price)}</div></div>
-            <div className="row">
-              <button className="btn ghost sm" aria-label={t('Kurangi')} onClick={() => cartApi.setQty(i.product_id, i.qty - 1)}>-</button>
-              <span>{i.qty}</span>
-              <button className="btn ghost sm" aria-label={t('Tambah')} onClick={() => cartApi.setQty(i.product_id, i.qty + 1)}>+</button>
-              <button className="btn ghost sm" onClick={() => cartApi.remove(i.product_id)}>{t('Hapus')}</button>
+          <div className="coitem" key={i.product_id}>
+            <span className={'cotile' + (i.logo_url ? ' white' : '')}>{i.logo_url ? <img src={i.logo_url} alt="" /> : <Icon n="pkg" size={26} />}</span>
+            <div className="coinfo">
+              <b>{i.name}</b>
+              {i.desc && <div className="muted">{i.desc}</div>}
+              <div className="tags pills">{i.labels?.map((l) => <span className="tag" key={l}>{l}</span>)}</div>
+            </div>
+            <div className="coqty">
+              <div className="row">
+                <button type="button" className="btn ghost sm" aria-label={t('Kurangi')} onClick={() => cartApi.setQty(i.product_id, i.qty - 1)}>-</button>
+                <span>{i.qty}</span>
+                <button type="button" className="btn ghost sm" aria-label={t('Tambah')} onClick={() => cartApi.setQty(i.product_id, i.qty + 1)}>+</button>
+              </div>
+              <div className="muted">{rupiah(i.price * i.qty)}</div>
+              <button type="button" className="linkbtn muted" onClick={() => cartApi.remove(i.product_id)}>{t('Hapus')}</button>
             </div>
           </div>
         ))}
-        <p className="total">{t('Subtotal perkiraan:')} {rupiah(sub)}</p>
-        {loy > 0 && <p className="ok">{t('Diskon pelanggan setia')} {loy}%: {t('perkiraan hemat')} {rupiah(Math.floor(sub * loy / 100))}</p>}
+        <div className="cototal"><span>{t('Total Pembayaran')}</span><b className="g">{rupiah(total)}</b></div>
+      </section>
+
+      <section className="box">
+        <h3 className="cotitle"><Icon n="receipt" size={20} /> {t('Metode Pembayaran')}</h3>
+        <p className="muted">{t('Pesanan dicatat dulu, lalu lanjutkan ke WhatsApp untuk petunjuk pembayaran. Pembayaran diverifikasi admin.')}</p>
+        <div className="paymethod">
+          <span className="paybadge">{t('Utama')}</span>
+          <b><Icon n="chat" size={16} /> {t('Konfirmasi via WhatsApp')}</b>
+          <div className="muted">{t('Transfer / QRIS • diverifikasi admin')}</div>
+        </div>
+        <div className="paysum">
+          <div className="line"><span>{t('Subtotal perkiraan:')}</span><span>{rupiah(sub)}</span></div>
+          {couponDisc > 0 && <div className="line"><span>{t('Diskon kupon')}</span><span>- {rupiah(couponDisc)}</span></div>}
+          {loyDisc > 0 && <div className="line"><span>{t('Diskon pelanggan setia')} {loy}%</span><span>- {rupiah(loyDisc)}</span></div>}
+          <div className="line total"><span>{t('Total bayar')}</span><span>{rupiah(total)}</span></div>
+        </div>
         <p className="muted">{t('Total final, diskon kupon, dan stok dihitung server saat pesanan dibuat.')}</p>
       </section>
-      <form className="box" onSubmit={submit}>
-        <h2>{t('Data pembeli')}</h2>
+
+      <section className="box">
+        <h3>{t('Data pembeli')}</h3>
         <label>{t('Nama')}<input required minLength={2} maxLength={80} value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></label>
         <label>{t('Nomor WhatsApp')}<input required inputMode="tel" placeholder="08xxxxxxxxxx" value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} /></label>
         <p className="muted">{t('Pesanan atas akun')} {session?.user.email}</p>
-        <label>{t('Kode kupon (opsional)')}<input value={f.coupon} onChange={(e) => setF({ ...f, coupon: e.target.value })} /></label>
-        <label>{t('Catatan')}<input maxLength={500} value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} /></label>
-        <label className="chk"><input type="checkbox" checked={f.agree} onChange={(e) => setF({ ...f, agree: e.target.checked })} />{t('Saya setuju dengan syarat transaksi toko.')}</label>
-        {err && <p className="err" role="alert">{err}</p>}
-        <button className="btn" disabled={busy}>{busy ? t('Membuat pesanan...') : t('Buat pesanan')}</button>
-      </form>
-    </div>
+      </section>
+
+      <section className="box">
+        <h3 className="cotitle"><Icon n="percent" size={20} /> {t('Kode Kupon')}</h3>
+        <div className="couponrow">
+          <input className="mono" placeholder={t('Masukkan kode kupon')} value={f.coupon} onChange={(e) => { setF({ ...f, coupon: e.target.value.toUpperCase() }); setApplied(null); setCErr('') }} />
+          <button type="button" className="btn" disabled={cBusy || !f.coupon.trim()} onClick={applyCoupon}>{cBusy ? '...' : t('Terapkan')}</button>
+        </div>
+        {applied && <p className="ok">{t('Kupon dipakai')}: {applied.code} (- {rupiah(applied.discount)})</p>}
+        {cErr && <p className="err" role="alert">{cErr}</p>}
+      </section>
+
+      <section className="box">
+        <h3>{t('Catatan (Opsional)')}</h3>
+        <textarea rows={4} maxLength={500} placeholder={t('Masukkan email/username yang akan digunakan, atau catatan lainnya...')} value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} />
+      </section>
+
+      <label className="chk"><input type="checkbox" checked={f.agree} onChange={(e) => setF({ ...f, agree: e.target.checked })} />{t('Saya setuju dengan syarat transaksi toko.')}</label>
+      <button className="btn lg wide paybtn" disabled={busy}>{busy ? t('Membuat pesanan...') : `${t('Buat Pesanan')} ${rupiah(total)}`}</button>
+      {err && <p className="err c" role="alert">{err}</p>}
+      <p className="muted c">{t('Setelah pesanan dibuat, Anda mendapat nomor pesanan dan kode akses untuk lanjut ke WhatsApp.')}</p>
+    </form>
   )
 }
 
