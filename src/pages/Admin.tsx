@@ -17,7 +17,7 @@ const mask = (p: string) => p.length > 6 ? p.slice(0, 4) + '****' + p.slice(-2) 
 export default function Admin() {
   const [sess, setSess] = useState<Session | null | undefined>(undefined)
   const [roles, setRoles] = useState<string[] | null>(null)
-  const [tab, setTab] = useState<'dash' | 'orders' | 'products' | 'categories' | 'reviews' | 'customers' | 'content'>('dash')
+  const [tab, setTab] = useState<'dash' | 'orders' | 'products' | 'categories' | 'reviews' | 'customers' | 'staff' | 'content'>('dash')
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSess(data.session))
     const { data } = supabase.auth.onAuthStateChange((_e, s) => setSess(s))
@@ -33,6 +33,7 @@ export default function Admin() {
   if (roles === null) return <p className="wrap muted">Memeriksa akses...</p>
   if (roles.length === 0) return <div className="wrap box"><h1>Tidak ada akses</h1><p>Akun ini belum memiliki role admin.</p><button className="btn" onClick={() => supabase.auth.signOut()}>Keluar</button></div>
   const manage = roles.some((r) => r === 'SUPER_ADMIN' || r === 'ADMIN')
+  const isSuper = roles.includes('SUPER_ADMIN')
   const ops = manage || roles.includes('ORDER_OPERATOR')
 
   return (
@@ -45,6 +46,7 @@ export default function Admin() {
         {manage && <button className="chip" aria-pressed={tab === 'categories'} onClick={() => setTab('categories')}>Kategori</button>}
         {manage && <button className="chip" aria-pressed={tab === 'reviews'} onClick={() => setTab('reviews')}>Testimoni</button>}
         {manage && <button className="chip" aria-pressed={tab === 'customers'} onClick={() => setTab('customers')}>Pelanggan</button>}
+        {isSuper && <button className="chip" aria-pressed={tab === 'staff'} onClick={() => setTab('staff')}>Peran Admin</button>}
         {manage && <button className="chip" aria-pressed={tab === 'content'} onClick={() => setTab('content')}>Konten</button>}
       </nav>
       {tab === 'dash' && <Orders ops={ops} summaryOnly />}
@@ -53,6 +55,7 @@ export default function Admin() {
       {tab === 'categories' && manage && <Categories />}
       {tab === 'reviews' && manage && <Content part="reviews" />}
       {tab === 'customers' && manage && <Customers />}
+      {tab === 'staff' && isSuper && <Staff meId={sess.user.id} />}
       {tab === 'content' && manage && <Content part="settings" />}
     </div>
   )
@@ -486,6 +489,82 @@ function Customers() {
         </table></div>
       )}
       <p className="muted">Data pribadi pelanggan, hanya tampil untuk admin. Jangan dibagikan ke pihak lain.</p>
+    </div>
+  )
+}
+
+const ROLE_LABEL: Record<string, string> = {
+  SUPER_ADMIN: 'Super Admin (akses penuh, termasuk atur peran)',
+  ADMIN: 'Admin (kelola produk, konten, pesanan, pelanggan)',
+  ORDER_OPERATOR: 'Operator Pesanan (proses pesanan)',
+  CUSTOMER_SERVICE: 'Customer Service (lihat dan beri catatan pesanan)',
+}
+interface StaffRow { user_id: string; email: string; full_name: string; role: string; since: string }
+function Staff({ meId }: { meId: string }) {
+  const [rows, setRows] = useState<StaffRow[] | null>(null)
+  const [email, setEmail] = useState('')
+  const [role, setRole] = useState('ADMIN')
+  const [msg, setMsg] = useState('')
+  const [busy, setBusy] = useState(false)
+  async function load() {
+    const { data, error } = await supabase.rpc('admin_staff')
+    if (error) setMsg('Gagal memuat: ' + error.message + ' (pastikan 0009_admin_roles.sql sudah dijalankan)')
+    else setRows((data ?? []) as StaffRow[])
+  }
+  useEffect(() => { load() }, [])
+  async function setRoleFor(addr: string, r: string) {
+    setMsg(''); setBusy(true)
+    const { error } = await supabase.rpc('admin_set_role', { p_email: addr, p_role: r })
+    setBusy(false)
+    if (error) { setMsg(error.message); return false }
+    setMsg('Peran disimpan.'); await load(); return true
+  }
+  async function add(e: FormEvent) {
+    e.preventDefault()
+    if (await setRoleFor(email, role)) setEmail('')
+  }
+  async function change(row: StaffRow, r: string) {
+    if (r === row.role) return
+    if (row.user_id === meId && !confirm('Anda mengubah peran akun Anda sendiri. Lanjutkan?')) { await load(); return }
+    await setRoleFor(row.email, r)
+  }
+  async function remove(row: StaffRow) {
+    if (!confirm(`Cabut semua akses admin dari ${row.email}?`)) return
+    setMsg(''); setBusy(true)
+    const { error } = await supabase.rpc('admin_remove_staff', { p_user: row.user_id })
+    setBusy(false)
+    if (error) setMsg(error.message); else { setMsg('Akses dicabut.'); await load() }
+  }
+  return (
+    <div>
+      <h2>Peran admin</h2>
+      <p className="muted">Hanya Super Admin yang melihat menu ini. Orang yang ingin dijadikan admin harus mendaftar akun di toko dulu, lalu masukkan emailnya di bawah. Peran berlaku saat mereka membuka ulang halaman admin.</p>
+      <form className="box" onSubmit={add}>
+        <h3>Tambah atau ubah peran</h3>
+        <label>Email akun terdaftar<input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></label>
+        <label>Peran<select value={role} onChange={(e) => setRole(e.target.value)}>{Object.entries(ROLE_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></label>
+        <button className="btn" disabled={busy}>Simpan peran</button>
+      </form>
+      {msg && <p role="status">{msg}</p>}
+      {!rows && !msg && <p className="muted">Memuat...</p>}
+      {rows && (
+        <div className="tw"><table>
+          <thead><tr><th>Email</th><th>Nama</th><th>Peran</th><th></th></tr></thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.user_id}>
+                <td>{r.email}{r.user_id === meId && <span className="muted"> (Anda)</span>}</td>
+                <td>{r.full_name || '-'}</td>
+                <td><select value={r.role} disabled={busy} onChange={(e) => change(r, e.target.value)} aria-label={`Peran ${r.email}`}>
+                  {Object.entries(ROLE_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></td>
+                <td><button className="btn ghost sm" disabled={busy} onClick={() => remove(r)}>Cabut akses</button></td>
+              </tr>
+            ))}
+            {rows.length === 0 && <tr><td colSpan={4} className="muted">Belum ada.</td></tr>}
+          </tbody>
+        </table></div>
+      )}
+      <p className="muted">Pengaman: Super Admin terakhir tidak bisa diturunkan atau dicabut. Setiap perubahan peran tercatat di log audit.</p>
     </div>
   )
 }
