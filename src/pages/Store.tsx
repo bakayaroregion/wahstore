@@ -150,7 +150,7 @@ export default function Store() {
         <h2>{t('Tentang')} <span className="g">{t('Toko Kami')}</span></h2>
         <p>{t('Setiap pesanan memiliki nomor dan kode akses untuk dicek kapan saja, dan pembayaran baru dianggap lunas setelah admin memverifikasinya.')}</p>
         <p><b>{t('Jam operasional:')}</b> {hours}</p>
-        <div className="row c"><Link className="btn ghost sm" to="/cek">{t('Cek Pesanan')}</Link>{session ? <Link className="btn ghost sm" to="/akun">{t('Akun Saya')}</Link> : <Link className="btn ghost sm" to="/masuk">{t('Masuk')}</Link>}</div>
+        <div className="row c">{session ? <><Link className="btn ghost sm" to="/cek">{t('Cek Pesanan')}</Link><Link className="btn ghost sm" to="/akun">{t('Akun Saya')}</Link></> : <Link className="btn ghost sm" to="/masuk">{t('Masuk')}</Link>}</div>
       </section>
     </>
   )

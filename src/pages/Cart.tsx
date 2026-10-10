@@ -101,6 +101,7 @@ interface Result { order_number: string; created_at: string; grand_total: number
 
 export function Check() {
   const t = useT()
+  const session = useSession()
   const [no, setNo] = useState('')
   const [tok, setTok] = useState('')
   const [res, setRes] = useState<Result | null>(null)
@@ -120,6 +121,8 @@ export function Check() {
     if (n && tk) { setNo(n); setTok(tk); load(n, tk) }
   }, [])
 
+  if (session === undefined) return <p className="muted">{t('Memuat...')}</p>
+  if (!session) return <section className="box"><h1>{t('Masuk dulu')}</h1><p>{t('Untuk berbelanja, Anda perlu akun dengan email yang terdaftar.')}</p><div className="row"><Link className="btn" to="/masuk">{t('Masuk')}</Link><Link className="btn ghost" to="/daftar">{t('Daftar')}</Link></div></section>
   return (
     <section className="box"><h1>{t('Cek pesanan')}</h1>
       <form onSubmit={(e) => { e.preventDefault(); load(no, tok) }}>

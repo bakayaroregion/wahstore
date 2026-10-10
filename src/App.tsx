@@ -34,9 +34,9 @@ function Shell() {
         <nav>
           <LangMenu />
           <ThemeToggle />
-          <Link to="/cek">{t('Cek pesanan')}</Link>
           {session ? (
             <>
+              <Link to="/cek">{t('Cek pesanan')}</Link>
               <Link to="/produk">{t('Produk')}</Link>
               <Link to="/akun">{t('Akun')}</Link>
               <button className="linkbtn" onClick={() => supabase.auth.signOut()}>{t('Keluar')}</button>
@@ -64,7 +64,7 @@ function Shell() {
       <footer><div className="wrap fcol">
         <div>© 2026 {brand.name}. {t('Pesanan diproses melalui WhatsApp.')}</div>
         <div className="muted">{t('Merek dan logo milik pemiliknya masing-masing.')} {brand.name} {t('tidak berafiliasi dengan merek yang ditampilkan.')}</div>
-        <div className="flinks"><Link to="/">{t('Beranda')}</Link><Link to="/cek">{t('Cek Pesanan')}</Link><Link to="/akun">{t('Akun')}</Link></div>
+        <div className="flinks"><Link to="/">{t('Beranda')}</Link>{session && <Link to="/cek">{t('Cek Pesanan')}</Link>}<Link to="/akun">{t('Akun')}</Link></div>
       </div></footer>
     </>
   )
