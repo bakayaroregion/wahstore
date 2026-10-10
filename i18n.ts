@@ -108,6 +108,7 @@ const D: Record<string, [string, string]> = {
   'Detail': ['Details', 'ព័ត៌មានលម្អិត'],
   'Beli': ['Buy', 'ទិញ'],
   // auth
+  'Stok habis': ['Out of stock', 'អស់ស្តុក'],
   'Katalog Produk': ['Product Catalog', 'កាតាឡុកផលិតផល'],
   'Diskon': ['Sale', 'បញ្ចុះតម្លៃ'],
   'Favorit': ['Favorites', 'ចូលចិត្ត'],
