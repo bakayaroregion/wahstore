@@ -49,12 +49,12 @@ function AuthPage({ mode }: { mode: 'login' | 'register' }) {
       })
       setBusy(false)
       if (error) { setErr(/registered|exists/i.test(error.message) ? t('Email ini sudah terdaftar. Silakan masuk.') : t('Pendaftaran gagal') + ': ' + error.message); return }
-      if (data.session) { rememberChoice(true); nav('/') } else setSent(f.email.trim())
+      if (data.session) { rememberChoice(true); nav('/produk') } else setSent(f.email.trim())
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email: f.email.trim(), password: f.pw })
       setBusy(false)
       if (error) { setErr(t('Email atau kata sandi salah, atau email belum diverifikasi.')); return }
-      rememberChoice(remember); nav('/')
+      rememberChoice(remember); nav('/produk')
     }
   }
   async function forgot() {

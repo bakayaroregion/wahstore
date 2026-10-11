@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { supabase } from '../supabase'
 import { cartApi, favApi, Product, rupiah, useFavs, useSession } from '../lib'
 import { Icon, catIcon } from '../ui'
@@ -59,6 +59,7 @@ export default function Store() {
   }, [])
 
   const nav = useNavigate()
+  if (session) return <Navigate to="/produk" replace />
   const start = session
     ? <Link className="btn lg" to="/produk">{t('Lihat Produk')} <Icon n="arrow" size={16} /></Link>
     : <Link className="btn lg" to="/daftar">{t('Daftar Sekarang')} <Icon n="arrow" size={16} /></Link>
