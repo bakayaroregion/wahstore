@@ -6,7 +6,7 @@ import { rupiah, slugify, STATUS } from '../lib'
 
 interface Order {
   id: string; order_number: string; customer_name: string; customer_phone: string; grand_total: number; created_at: string
-  order_status: string; payment_status: string; fulfillment_status: string
+  order_status: string; payment_status: string; fulfillment_status: string; payment_method?: string | null; proof_path?: string | null
   order_items: { name_snapshot: string; quantity: number }[]
 }
 interface Prod { id?: string; name: string; slug: string; sku: string; category_id: string | null; price: number; compare_at_price: number | null
@@ -17,7 +17,7 @@ const mask = (p: string) => p.length > 6 ? p.slice(0, 4) + '****' + p.slice(-2) 
 export default function Admin() {
   const [sess, setSess] = useState<Session | null | undefined>(undefined)
   const [roles, setRoles] = useState<string[] | null>(null)
-  const [tab, setTab] = useState<'dash' | 'orders' | 'products' | 'categories' | 'reviews' | 'customers' | 'staff' | 'content'>('dash')
+  const [tab, setTab] = useState<'dash' | 'orders' | 'products' | 'categories' | 'reviews' | 'customers' | 'staff' | 'content' | 'payments'>('dash')
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSess(data.session))
     const { data } = supabase.auth.onAuthStateChange((_e, s) => setSess(s))
@@ -46,6 +46,7 @@ export default function Admin() {
         {manage && <button className="chip" aria-pressed={tab === 'categories'} onClick={() => setTab('categories')}>Kategori</button>}
         {manage && <button className="chip" aria-pressed={tab === 'reviews'} onClick={() => setTab('reviews')}>Testimoni</button>}
         {manage && <button className="chip" aria-pressed={tab === 'customers'} onClick={() => setTab('customers')}>Pelanggan</button>}
+        {manage && <button className="chip" aria-pressed={tab === 'payments'} onClick={() => setTab('payments')}>Pembayaran</button>}
         {isSuper && <button className="chip" aria-pressed={tab === 'staff'} onClick={() => setTab('staff')}>Peran Admin</button>}
         {manage && <button className="chip" aria-pressed={tab === 'content'} onClick={() => setTab('content')}>Konten</button>}
       </nav>
@@ -55,6 +56,7 @@ export default function Admin() {
       {tab === 'categories' && manage && <Categories />}
       {tab === 'reviews' && manage && <Content part="reviews" />}
       {tab === 'customers' && manage && <Customers />}
+      {tab === 'payments' && manage && <Payments />}
       {tab === 'staff' && isSuper && <Staff meId={sess.user.id} />}
       {tab === 'content' && manage && <Content part="settings" />}
     </div>
@@ -84,7 +86,7 @@ function Orders({ ops, summaryOnly }: { ops: boolean; summaryOnly?: boolean }) {
   const [rows, setRows] = useState<Order[] | null>(null)
   const [err, setErr] = useState('')
   const load = useCallback(() => {
-    supabase.from('orders').select('id,order_number,customer_name,customer_phone,grand_total,created_at,order_status,payment_status,fulfillment_status,order_items(name_snapshot,quantity)')
+    supabase.from('orders').select('id,order_number,customer_name,customer_phone,grand_total,created_at,order_status,payment_status,fulfillment_status,payment_method,proof_path,order_items(name_snapshot,quantity)')
       .order('created_at', { ascending: false }).limit(500).then(({ data, error }) => { if (error) setErr('Pesanan gagal dimuat.'); else setRows(data as unknown as Order[]) })
   }, [])
   useEffect(load, [load])
@@ -95,6 +97,11 @@ function Orders({ ops, summaryOnly }: { ops: boolean; summaryOnly?: boolean }) {
     else if (!window.confirm(`${label} untuk ${o.order_number}?`)) return
     const { error } = await supabase.rpc('admin_transition', { p_order: o.id, p_kind: kind, p_new: to, p_note: note })
     if (error) window.alert('Gagal: ' + error.message); else load()
+  }
+
+  async function viewProof(path: string) {
+    const { data, error } = await supabase.storage.from('proofs').createSignedUrl(path, 120)
+    if (error || !data) window.alert('Bukti tidak bisa dibuka: ' + (error?.message ?? '')); else window.open(data.signedUrl, '_blank', 'noopener')
   }
 
   if (err) return <p className="err">{err}</p>
@@ -122,8 +129,9 @@ function Orders({ ops, summaryOnly }: { ops: boolean; summaryOnly?: boolean }) {
               <td>{o.customer_name}<div className="muted">{mask(o.customer_phone)}</div></td>
               <td>{o.order_items.map((i) => `${i.name_snapshot} x${i.quantity}`).join(', ')}</td>
               <td>{rupiah(o.grand_total)}</td>
-              <td><div>Pesanan: {STATUS[o.order_status]}</div><div>Bayar: {STATUS[o.payment_status]}</div><div>Proses: {STATUS[o.fulfillment_status]}</div></td>
+              <td><div>Pesanan: {STATUS[o.order_status]}</div><div>Bayar: {STATUS[o.payment_status]}</div>{o.payment_method && <div className="muted">{o.payment_method}</div>}<div>Proses: {STATUS[o.fulfillment_status]}</div></td>
               {!summaryOnly && <td><div className="acts">
+                {o.proof_path && <button className="btn ghost sm" onClick={() => viewProof(o.proof_path!)}>Lihat bukti</button>}
                 <a className="btn ghost sm" href={`https://wa.me/${o.customer_phone}`} target="_blank" rel="noopener noreferrer">Buka WhatsApp</a>
                 {ops && o.order_status === 'PENDING' && <button className="btn sm" onClick={() => act(o, 'order', 'CONFIRMED', 'Konfirmasi pesanan')}>Konfirmasi</button>}
                 {ops && ['UNPAID', 'AWAITING_VERIFICATION'].includes(o.payment_status) && o.order_status !== 'CANCELLED' && <button className="btn sm" onClick={() => act(o, 'payment', 'PAID', 'Tandai pembayaran terverifikasi')}>Pembayaran terverifikasi</button>}
@@ -136,6 +144,67 @@ function Orders({ ops, summaryOnly }: { ops: boolean; summaryOnly?: boolean }) {
             </tr>
           ))}
           {list.length === 0 && <tr><td colSpan={6} className="muted">Belum ada pesanan.</td></tr>}
+        </tbody>
+      </table></div>
+    </>
+  )
+}
+
+interface PM { id?: string; kind: 'QRIS' | 'BANK'; label: string; account_number: string; account_name: string; qr_image_url: string; sort_order: number; is_active: boolean }
+const blankPM: PM = { kind: 'BANK', label: '', account_number: '', account_name: '', qr_image_url: '', sort_order: 0, is_active: true }
+
+function Payments() {
+  const [rows, setRows] = useState<PM[] | null>(null)
+  const [f, setF] = useState<PM | null>(null)
+  const [err, setErr] = useState('')
+  const load = useCallback(() => {
+    supabase.from('payment_methods').select('*').order('sort_order').then(({ data }) =>
+      setRows((data ?? []).map((m) => ({ ...m, account_number: m.account_number ?? '', account_name: m.account_name ?? '', qr_image_url: m.qr_image_url ?? '' })) as PM[]))
+  }, [])
+  useEffect(load, [load])
+  async function save(e: FormEvent) {
+    e.preventDefault(); if (!f) return; setErr('')
+    if (f.kind === 'BANK' && (!f.account_number.trim() || !f.account_name.trim())) { setErr('Nomor rekening dan atas nama wajib diisi.'); return }
+    if (f.kind === 'QRIS' && !f.qr_image_url) { setErr('Unggah gambar QRIS dulu.'); return }
+    const { id, ...rest } = f
+    const body = { ...rest, label: f.label.trim(), account_number: f.kind === 'BANK' ? f.account_number.trim() : null, account_name: f.kind === 'BANK' ? f.account_name.trim() : null, qr_image_url: f.kind === 'QRIS' ? f.qr_image_url : null }
+    const { error } = id ? await supabase.from('payment_methods').update(body).eq('id', id) : await supabase.from('payment_methods').insert(body)
+    if (error) { setErr('Gagal menyimpan: ' + error.message); return }
+    setF(null); load()
+  }
+  async function del(id: string) {
+    if (!window.confirm('Hapus metode pembayaran ini?')) return
+    const { error } = await supabase.from('payment_methods').delete().eq('id', id)
+    if (error) window.alert('Gagal menghapus: ' + error.message); else load()
+  }
+  const set = (k: keyof PM, v: unknown) => setF((x) => (x ? { ...x, [k]: v } : x))
+  return (
+    <>
+      <p className="muted">Isi dengan data rekening dan QRIS asli milik toko. Pembeli melihatnya saat checkout. Bukti transfer pembeli muncul di menu Pesanan (tombol Lihat bukti).</p>
+      <button className="btn" onClick={() => setF({ ...blankPM })}>Tambah metode</button>
+      {f && (
+        <form className="box formgrid" onSubmit={save}>
+          <label>Jenis<select value={f.kind} onChange={(e) => set('kind', e.target.value)}><option value="BANK">Rekening / e-wallet</option><option value="QRIS">QRIS</option></select></label>
+          <label>Nama (mis. BNI, OVO, QRIS Toko)<input required minLength={2} maxLength={40} value={f.label} onChange={(e) => set('label', e.target.value)} /></label>
+          {f.kind === 'BANK' ? <>
+            <label>Nomor rekening / HP e-wallet<input required value={f.account_number} onChange={(e) => set('account_number', e.target.value)} /></label>
+            <label>Atas nama<input required value={f.account_name} onChange={(e) => set('account_name', e.target.value)} /></label>
+          </> : <div className="wide"><PhotoField label="Gambar QRIS" value={f.qr_image_url} onChange={(u) => set('qr_image_url', u)} folder="qris" /></div>}
+          <label>Urutan<input type="number" value={f.sort_order} onChange={(e) => set('sort_order', Number(e.target.value))} /></label>
+          <label className="chk"><input type="checkbox" checked={f.is_active} onChange={(e) => set('is_active', e.target.checked)} />Tampilkan di checkout</label>
+          {err && <p className="err wide" role="alert">{err}</p>}
+          <div className="row wide"><button className="btn">Simpan</button><button type="button" className="btn ghost" onClick={() => setF(null)}>Batal</button></div>
+        </form>
+      )}
+      <div className="tw"><table>
+        <thead><tr><th>Metode</th><th>Detail</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          {(rows ?? []).map((m) => (
+            <tr key={m.id}><td>{m.kind === 'QRIS' && m.qr_image_url && <img className="thumb" src={m.qr_image_url} alt="" />} {m.label}<div className="muted">{m.kind}</div></td>
+              <td>{m.kind === 'BANK' ? `${m.account_number} a.n. ${m.account_name}` : 'Gambar QRIS'}</td><td>{m.is_active ? 'Tampil' : 'Disembunyikan'}</td>
+              <td><div className="acts"><button className="btn ghost sm" onClick={() => setF(m)}>Ubah</button><button className="btn bad sm" onClick={() => del(m.id!)}>Hapus</button></div></td></tr>
+          ))}
+          {rows && rows.length === 0 && <tr><td colSpan={4} className="muted">Belum ada metode pembayaran. Tambahkan minimal satu supaya checkout bisa dipakai.</td></tr>}
         </tbody>
       </table></div>
     </>

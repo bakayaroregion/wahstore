@@ -6,6 +6,20 @@ import { useT } from '../i18n'
 import { Icon } from '../ui'
 
 interface Done { order_number: string; access_token: string; grand_total: number; wa_url: string | null; warning: string | null }
+interface Method { id: string; kind: 'QRIS' | 'BANK'; label: string; account_number: string | null; account_name: string | null; qr_image_url: string | null }
+const PROOF_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+const PROOF_MAX = 5 * 1024 * 1024
+
+async function sendProof(orderNo: string, methodId: string, file: File, uid: string) {
+  if (!PROOF_TYPES.includes(file.type)) throw new Error('type')
+  if (file.size > PROOF_MAX) throw new Error('size')
+  const ext = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg'
+  const path = `${uid}/${orderNo}-${crypto.randomUUID()}.${ext}`
+  const up = await supabase.storage.from('proofs').upload(path, file, { contentType: file.type })
+  if (up.error) throw new Error(up.error.message)
+  const { error } = await supabase.rpc('submit_payment_proof', { p_order_number: orderNo, p_method: methodId, p_path: path })
+  if (error) throw new Error(error.message)
+}
 interface Saved { order_number: string; token: string }
 
 async function errMsg(error: unknown, fallback: string) {
@@ -28,6 +42,28 @@ export function Cart() {
   const [busy, setBusy] = useState(false)
   const [done, setDone] = useState<Done | null>(null)
   const [copied, setCopied] = useState(false)
+  const [methods, setMethods] = useState<Method[]>([])
+  const [kind, setKind] = useState<'QRIS' | 'BANK'>('BANK')
+  const [sel, setSel] = useState('')
+  const [proof, setProof] = useState<File | null>(null)
+  const [preview, setPreview] = useState('')
+  const [copyKey, setCopyKey] = useState('')
+  const [proofState, setProofState] = useState<'ok' | 'fail' | 'retry'>('ok')
+  const [pending, setPending] = useState<{ method: string; file: File } | null>(null)
+  useEffect(() => {
+    if (!session) return
+    supabase.from('payment_methods').select('id,kind,label,account_number,account_name,qr_image_url').eq('is_active', true).order('sort_order').then(({ data }) => {
+      const m = (data ?? []) as Method[]
+      setMethods(m)
+      const first = m.find((x) => x.kind === 'BANK') ?? m[0]
+      if (first) { setKind(first.kind); setSel(first.id) }
+    })
+  }, [session])
+  useEffect(() => {
+    if (!proof) { setPreview(''); return }
+    const u = URL.createObjectURL(proof); setPreview(u)
+    return () => URL.revokeObjectURL(u)
+  }, [proof])
   const [applied, setApplied] = useState<{ code: string; discount: number } | null>(null)
   const [cErr, setCErr] = useState('')
   const [cBusy, setCBusy] = useState(false)
@@ -50,9 +86,25 @@ export function Cart() {
   }
   useEffect(() => { if (applied) applyCoupon() }, [sub])
 
+  function pickProof(file?: File) {
+    if (!file) return
+    if (!PROOF_TYPES.includes(file.type)) { setErr(t('Bukti harus berupa JPG, PNG, atau WebP.')); return }
+    if (file.size > PROOF_MAX) { setErr(t('Ukuran bukti maksimal 5 MB.')); return }
+    setErr(''); setProof(file)
+  }
+  function copy(k: string, v: string) { navigator.clipboard?.writeText(v); setCopyKey(k); setTimeout(() => setCopyKey(''), 1500) }
+  async function retryProof() {
+    if (!pending || !done || !session) return
+    setBusy(true)
+    try { await sendProof(done.order_number, pending.method, pending.file, session.user.id); setProofState('ok'); setPending(null) } catch { setProofState('retry') }
+    setBusy(false)
+  }
+
   async function submit(e: FormEvent) {
     e.preventDefault(); setErr('')
     if (!f.agree) { setErr(t('Setujui syarat transaksi terlebih dahulu.')); return }
+    if (!sel) { setErr(t('Pilih metode pembayaran terlebih dahulu.')); return }
+    if (!proof) { setErr(t('Unggah bukti pembayaran terlebih dahulu.')); return }
     setBusy(true)
     const { data, error } = await supabase.functions.invoke('create-order', {
       body: { name: f.name, phone: f.phone, note: f.note, coupon: f.coupon, items: cart.map((i) => ({ product_id: i.product_id, quantity: i.qty })) },
@@ -62,6 +114,8 @@ export function Cart() {
     const saved = read<Saved[]>('ws_orders', [])
     write('ws_orders', [{ order_number: data.order_number, token: data.access_token }, ...saved].slice(0, 20))
     cartApi.clear(); setDone(data as Done)
+    try { await sendProof(data.order_number, sel, proof, session!.user.id); setProofState('ok') }
+    catch { setPending({ method: sel, file: proof }); setProofState('fail') }
   }
 
   if (done) return (
@@ -69,6 +123,8 @@ export function Cart() {
       <h1>{t('Pesanan dibuat')}</h1>
       <p className="ok">{t('Nomor pesanan:')} <b>{done.order_number}</b></p>
       <p>{t('Total')} {rupiah(done.grand_total)}. {t(STATUS.PENDING)}, {t(STATUS.UNPAID).toLowerCase()}.</p>
+      {proofState === 'ok' && <p className="ok">{t('Bukti pembayaran terkirim. Admin akan memverifikasi pembayaran Anda.')}</p>}
+      {proofState !== 'ok' && <div className="paywarn"><p className="err">{t('Pesanan sudah dibuat, tetapi bukti pembayaran belum terkirim.')}</p><button className="btn" disabled={busy} onClick={retryProof}>{busy ? '...' : t('Kirim ulang bukti')}</button></div>}
       {done.wa_url
         ? <a className="btn" href={done.wa_url} target="_blank" rel="noopener noreferrer">{t('Lanjutkan ke WhatsApp')}</a>
         : <p className="err">{done.warning ?? 'Tautan WhatsApp belum tersedia.'}</p>}
@@ -119,13 +175,45 @@ export function Cart() {
       </section>
 
       <section className="box">
-        <h3 className="cotitle"><Icon n="receipt" size={20} /> {t('Metode Pembayaran')}</h3>
-        <p className="muted">{t('Pesanan dicatat dulu, lalu lanjutkan ke WhatsApp untuk petunjuk pembayaran. Pembayaran diverifikasi admin.')}</p>
-        <div className="paymethod">
-          <span className="paybadge">{t('Utama')}</span>
-          <b><Icon n="chat" size={16} /> {t('Konfirmasi via WhatsApp')}</b>
-          <div className="muted">{t('Transfer / QRIS • diverifikasi admin')}</div>
-        </div>
+        <h3 className="cotitle"><Icon n="receipt" size={20} /> {t('Pilih Metode Pembayaran')}</h3>
+        {methods.length === 0 ? <p className="muted">{t('Metode pembayaran belum diatur oleh admin. Hubungi admin lewat WhatsApp.')}</p> : (() => {
+          const hasQ = methods.some((m) => m.kind === 'QRIS'), hasB = methods.some((m) => m.kind === 'BANK')
+          const list = methods.filter((m) => m.kind === kind)
+          const cur = list.find((m) => m.id === sel) ?? list[0]
+          const switchKind = (k: 'QRIS' | 'BANK') => { setKind(k); const first = methods.find((m) => m.kind === k); if (first) setSel(first.id) }
+          return (
+            <>
+              <div className="paykinds" role="tablist">
+                {hasQ && <button type="button" role="tab" aria-selected={kind === 'QRIS'} className={'paykind' + (kind === 'QRIS' ? ' on' : '')} onClick={() => switchKind('QRIS')}>QRIS</button>}
+                {hasB && <button type="button" role="tab" aria-selected={kind === 'BANK'} className={'paykind' + (kind === 'BANK' ? ' on' : '')} onClick={() => switchKind('BANK')}>{t('Transfer Rekening')}</button>}
+              </div>
+              {list.length > 1 && <div className="paytabs">{list.map((m) => <button type="button" key={m.id} className={'paytab' + (cur?.id === m.id ? ' on' : '')} onClick={() => setSel(m.id)}>{m.label}</button>)}</div>}
+              {cur && (
+                <div className="payinfo">
+                  {cur.kind === 'QRIS' ? (
+                    <>
+                      <p className="muted">{t('Scan QRIS di bawah dengan aplikasi bank atau e-wallet, lalu unggah bukti pembayaran.')}</p>
+                      {cur.qr_image_url ? <img className="qrimg" src={cur.qr_image_url} alt="QRIS" /> : <p className="err">{t('Gambar QRIS belum diunggah admin.')}</p>}
+                    </>
+                  ) : (
+                    <>
+                      <div className="payrow"><span className="muted">{t('Bank')}</span><b>{cur.label}</b></div>
+                      <div className="payrow"><span className="muted">{t('Nomor Rekening')}</span><b className="mono">{cur.account_number}</b><button type="button" className="btn ghost sm" onClick={() => copy('acc', cur.account_number ?? '')}>{copyKey === 'acc' ? t('Tersalin') : t('Salin')}</button></div>
+                      <div className="payrow"><span className="muted">{t('Atas Nama')}</span><b>{cur.account_name}</b></div>
+                    </>
+                  )}
+                  <div className="payrow"><span className="muted">{t('Jumlah Pembayaran')}</span><b className="g">{rupiah(total)}</b><button type="button" className="btn ghost sm" onClick={() => copy('amt', String(total))}>{copyKey === 'amt' ? t('Tersalin') : t('Salin')}</button></div>
+                </div>
+              )}
+              <h4 className="proofh">{t('Upload Bukti Transfer')}</h4>
+              <label className="dropzone">
+                <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => pickProof(e.target.files?.[0])} />
+                {preview ? <img src={preview} alt={t('Pratinjau bukti')} /> : <span><Icon n="receipt" size={26} /><br />{t('Klik untuk memilih bukti pembayaran')}<br /><small className="muted">JPG, PNG, WebP • max 5MB</small></span>}
+              </label>
+              {proof && <button type="button" className="linkbtn muted" onClick={() => setProof(null)}>{t('Hapus bukti')}</button>}
+            </>
+          )
+        })()}
         <div className="paysum">
           <div className="line"><span>{t('Subtotal perkiraan:')}</span><span>{rupiah(sub)}</span></div>
           {couponDisc > 0 && <div className="line"><span>{t('Diskon kupon')}</span><span>- {rupiah(couponDisc)}</span></div>}
@@ -158,9 +246,9 @@ export function Cart() {
       </section>
 
       <label className="chk"><input type="checkbox" checked={f.agree} onChange={(e) => setF({ ...f, agree: e.target.checked })} />{t('Saya setuju dengan syarat transaksi toko.')}</label>
-      <button className="btn lg wide paybtn" disabled={busy}>{busy ? t('Membuat pesanan...') : `${t('Buat Pesanan')} ${rupiah(total)}`}</button>
+      <button className="btn lg wide paybtn" disabled={busy || methods.length === 0}>{busy ? t('Membuat pesanan...') : `${t('Konfirmasi Pesanan')} ${rupiah(total)}`}</button>
       {err && <p className="err c" role="alert">{err}</p>}
-      <p className="muted c">{t('Setelah pesanan dibuat, Anda mendapat nomor pesanan dan kode akses untuk lanjut ke WhatsApp.')}</p>
+      <p className="muted c">{t('Bayar dulu sesuai metode di atas, unggah buktinya, lalu tekan Konfirmasi Pesanan. Admin memverifikasi pembayaran Anda.')}</p>
     </form>
   )
 }
