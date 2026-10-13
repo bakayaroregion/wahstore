@@ -64,23 +64,32 @@ interface Brand { slug: string; bg: string; dark: boolean; x: number; y: number;
 // Ikon dari Simple Icons (lisensi CC0) di /public/brands. Tambah atau hapus baris untuk mengatur ikon yang melayang.
 // Nama dan logo adalah merek dagang pemiliknya masing-masing.
 const BRANDS: Brand[] = [
-  // baris atas: 8 ikon sejajar rata
-  { slug: 'netflix', bg: '#E50914', dark: false, x: 6.5, y: 11, s: 56, d: 8, dx: 5, dy: -6 },
-  { slug: 'spotify', bg: '#1DB954', dark: false, x: 18.9, y: 11, s: 56, d: 9, dx: -5, dy: 6 },
-  { slug: 'youtube', bg: '#FF0000', dark: false, x: 31.4, y: 11, s: 56, d: 10, dx: 5, dy: -6 },
-  { slug: 'canva', bg: '#00A7B5', dark: false, x: 43.8, y: 11, s: 56, d: 8, dx: -5, dy: 6 },
-  { slug: 'discord', bg: '#5865F2', dark: false, x: 56.2, y: 11, s: 56, d: 9, dx: 5, dy: -6 },
-  { slug: 'twitch', bg: '#9146FF', dark: false, x: 68.6, y: 11, s: 56, d: 10, dx: -5, dy: 6 },
-  { slug: 'tiktok', bg: '#161616', dark: false, x: 81.1, y: 11, s: 56, d: 8, dx: 5, dy: -6 },
-  { slug: 'x', bg: '#161616', dark: false, x: 93.5, y: 11, s: 56, d: 9, dx: -5, dy: 6 },
-  // baris bawah: 7 ikon sejajar rata
-  { slug: 'facebook', bg: '#0866FF', dark: false, x: 9.0, y: 89, s: 56, d: 9, dx: -5, dy: 6 },
-  { slug: 'telegram', bg: '#26A5E4', dark: false, x: 23.2, y: 89, s: 56, d: 10, dx: 5, dy: -6 },
-  { slug: 'whatsapp', bg: '#25D366', dark: false, x: 37.4, y: 89, s: 56, d: 11, dx: -5, dy: 6 },
-  { slug: 'pinterest', bg: '#E60023', dark: false, x: 51.6, y: 89, s: 56, d: 9, dx: 5, dy: -6 },
-  { slug: 'snapchat', bg: '#FFFC00', dark: true, x: 65.8, y: 89, s: 56, d: 10, dx: -5, dy: 6 },
-  { slug: 'reddit', bg: '#FF4500', dark: false, x: 80.0, y: 89, s: 56, d: 11, dx: 5, dy: -6 },
-  { slug: 'instagram', bg: 'linear-gradient(45deg,#f09433,#dc2743 55%,#bc1888)', dark: false, x: 94.2, y: 89, s: 56, d: 9, dx: -5, dy: 6 },
+  { slug: 'netflix', bg: '#E50914', dark: false, x: 4, y: 14, s: 36, d: 8, dx: 4, dy: -6 },
+  { slug: 'spotify', bg: '#1DB954', dark: false, x: 14, y: 9, s: 34, d: 9, dx: -6, dy: 8 },
+  { slug: 'youtube', bg: '#FF0000', dark: false, x: 27, y: 18, s: 32, d: 10, dx: 8, dy: -10 },
+  { slug: 'canva', bg: '#00A7B5', dark: false, x: 42, y: 11, s: 34, d: 11, dx: -4, dy: 12 },
+  { slug: 'discord', bg: '#5865F2', dark: false, x: 57, y: 18, s: 32, d: 8, dx: 6, dy: -6 },
+  { slug: 'twitch', bg: '#9146FF', dark: false, x: 68, y: 12, s: 36, d: 9, dx: -8, dy: 8 },
+  { slug: 'tiktok', bg: '#161616', dark: false, x: 80, y: 16, s: 32, d: 10, dx: 4, dy: -10 },
+  { slug: 'x', bg: '#161616', dark: false, x: 90, y: 9, s: 34, d: 11, dx: -6, dy: 12 },
+  { slug: 'threads', bg: '#161616', dark: false, x: 96, y: 20, s: 30, d: 8, dx: 8, dy: -6 },
+  { slug: 'github', bg: '#24292F', dark: false, x: 3, y: 44, s: 34, d: 9, dx: -4, dy: 8 },
+  { slug: 'steam', bg: '#1B2838', dark: false, x: 12, y: 36, s: 32, d: 10, dx: 6, dy: -10 },
+  { slug: 'zoom', bg: '#0B5CFF', dark: false, x: 24, y: 46, s: 36, d: 11, dx: -8, dy: 12 },
+  { slug: 'wattpad', bg: '#FF500A', dark: false, x: 18, y: 25, s: 32, d: 8, dx: 4, dy: -6 },
+  { slug: 'amazon', bg: '#232F3E', dark: false, x: 93, y: 64, s: 34, d: 9, dx: -6, dy: 8 },
+  { slug: 'vimeo', bg: '#1AB7EA', dark: false, x: 8, y: 62, s: 32, d: 10, dx: 8, dy: -10 },
+  { slug: 'linkedin', bg: '#0A66C2', dark: false, x: 86, y: 58, s: 34, d: 11, dx: -4, dy: 12 },
+  { slug: 'googledrive', bg: '#1FA463', dark: false, x: 78, y: 47, s: 32, d: 8, dx: 6, dy: -6 },
+  { slug: 'notion', bg: '#2B2B2B', dark: false, x: 89, y: 42, s: 36, d: 9, dx: -8, dy: 8 },
+  { slug: 'applemusic', bg: '#FA243C', dark: false, x: 96, y: 51, s: 30, d: 10, dx: 4, dy: -10 },
+  { slug: 'facebook', bg: '#0866FF', dark: false, x: 6, y: 86, s: 36, d: 11, dx: -6, dy: 12 },
+  { slug: 'telegram', bg: '#26A5E4', dark: false, x: 17, y: 91, s: 34, d: 8, dx: 8, dy: -6 },
+  { slug: 'whatsapp', bg: '#25D366', dark: false, x: 29, y: 84, s: 32, d: 9, dx: -4, dy: 8 },
+  { slug: 'pinterest', bg: '#E60023', dark: false, x: 41, y: 92, s: 34, d: 10, dx: 6, dy: -10 },
+  { slug: 'snapchat', bg: '#FFFC00', dark: true, x: 53, y: 85, s: 36, d: 11, dx: -8, dy: 12 },
+  { slug: 'reddit', bg: '#FF4500', dark: false, x: 64, y: 91, s: 32, d: 8, dx: 4, dy: -6 },
+  { slug: 'instagram', bg: 'linear-gradient(45deg,#f09433,#dc2743 55%,#bc1888)', dark: false, x: 76, y: 85, s: 34, d: 9, dx: -6, dy: 8 },
 ]
 
 function BrandTile({ b, i }: { b: Brand; i: number }) {
@@ -98,30 +107,38 @@ const METEORS = [[95, 2, 6, 0, 150], [70, -5, 7, 2, 210], [45, 8, 8, 5, 120], [1
   [88, -2, 5.5, 2.5, 170], [52, -6, 6.5, 6.5, 230], [105, 8, 7.5, 3.5, 100], [75, 20, 8.5, 9, 190], [38, 2, 9.5, 1.5, 150], [92, 34, 6, 5.5, 125], [22, -4, 7, 7.5, 175]]
 
 // Ranting pohon sakura dan burung untuk tema siang bergaya Jepang.
-const PETALS = Array.from({ length: 22 }, (_, k) => ({ x: (k * 4.7 + (k % 3) * 2.1) % 100, d: 11 + (k * 7) % 9, w: (k * 3.3) % 14, s: 8 + (k * 5) % 8 }))
+const PETALS = Array.from({ length: 12 }, (_, k) => ({ x: (k * 4.7 + (k % 3) * 2.1) % 100, d: 11 + (k * 7) % 9, w: (k * 3.3) % 14, s: 8 + (k * 5) % 8 }))
 const BIRDS = [[14, 26, 0, 11], [22, 70, 9, 15], [9, 40, 5, 19], [18, 58, 14, 13], [12, 33, 2, 17]]
 
 // Latar angkasa dekoratif: bintang diam, bintang jatuh, dan ubin ikon aplikasi yang melayang.
+// Rasi bintang: titik [x%, y%]. Garis dan titiknya berkedip pelan.
+const CONSTS = [
+  [[78, 16], [82, 8], [86, 4], [90, 10]],
+  [[93, 22], [95, 32], [90, 40], [86, 47]],
+  [[30, 93], [36, 87], [42, 91], [46, 85], [52, 93]],
+  [[4, 30], [9, 24], [14, 28], [12, 36]],
+  [[56, 72], [60, 78], [66, 74], [70, 80]],
+  [[18, 60], [22, 66], [28, 63]],
+]
+
 export function Space() {
   const stars = useMemo(() => {
     let s = 7; const r = () => (s = (s * 16807) % 2147483647) / 2147483647
-    return Array.from({ length: 170 }, (_, k) => ({ x: r() * 100, y: r() * 100, z: r() * 2 + 1, o: r() * 0.6 + 0.3, tw: 2 + r() * 4, dl: r() * 6, bright: k % 14 === 0 }))
+    return Array.from({ length: 150 }, () => ({ x: r() * 100, y: r() * 100, z: r() * 2 + 1, o: r() * 0.6 + 0.25, tw: 2 + r() * 4, dl: r() * 6 }))
   }, [])
-  const trails = useMemo(() => Array.from({ length: 16 }, (_, k) => ({ r: 14 + k * 5.5, w: 0.35 + (k % 4) * 0.12, dash: `${20 + (k * 13) % 50} ${30 + (k * 29) % 90}`, o: 0.18 + (k % 5) * 0.07 })), [])
+  const orbs = useMemo(() => {
+    let s = 31; const r = () => (s = (s * 16807) % 2147483647) / 2147483647
+    return Array.from({ length: 16 }, () => ({ x: r() * 100, y: r() * 100, z: 14 + r() * 20, tw: 5 + r() * 6, dl: r() * 8 }))
+  }, [])
   return (
     <div className="space" aria-hidden="true">
-      <div className="milky" />
-      {stars.map((t, k) => <i className={'star' + (t.bright ? ' b' : '')} key={k} style={{ left: `${t.x}%`, top: `${t.y}%`, width: t.bright ? t.z + 1.5 : t.z, height: t.bright ? t.z + 1.5 : t.z, opacity: t.o, animationDuration: `${t.tw}s`, animationDelay: `-${t.dl}s` }} />)}
-      <svg className="trails" viewBox="-100 -100 200 200">{trails.map((c, k) => <circle key={k} r={c.r} strokeWidth={c.w} strokeDasharray={c.dash} opacity={c.o} />)}</svg>
+      {orbs.map((o, k) => <i className="orb" key={k} style={{ left: `${o.x}%`, top: `${o.y}%`, width: o.z, height: o.z, animationDuration: `${o.tw}s`, animationDelay: `-${o.dl}s` }} />)}
+      {stars.map((t, k) => <i className="star" key={k} style={{ left: `${t.x}%`, top: `${t.y}%`, width: t.z, height: t.z, opacity: t.o, animationDuration: `${t.tw}s`, animationDelay: `-${t.dl}s` }} />)}
       {METEORS.map((m, k) => <i className="shoot" key={k} style={{ left: `${m[0]}%`, top: `${m[1]}%`, '--t': `${m[2]}s`, '--l': `${m[4]}px`, animationDelay: `-${m[3]}s` } as CSSProperties} />)}
-      <svg className="const" viewBox="0 0 100 100" preserveAspectRatio="none"><polyline points="2,16 6,22 12,19 15,27" /><polyline points="84,66 90,72 97,69" /><polyline points="20,86 26,81 32,85" /><polyline points="60,4 66,9 72,6" /></svg>
+      <svg className="const" viewBox="0 0 100 100" preserveAspectRatio="none">{CONSTS.map((c, k) => <polyline key={k} points={c.map((p) => p.join(',')).join(' ')} style={{ animationDelay: `-${k * 1.7}s` }} />)}</svg>
+      {CONSTS.flat().map((p, k) => <i className="node" key={k} style={{ left: `${p[0]}%`, top: `${p[1]}%`, animationDelay: `-${(k % 6) * 0.9}s` }} />)}
       <div className="sun" />
-      {[[8, 10, 260, 90], [40, 24, 320, 120], [66, 6, 240, 100], [18, 52, 300, 140]].map((c, k) => (
-        <svg className="cloud" key={k} viewBox="0 0 120 40" style={{ left: `${c[0]}%`, top: `${c[1]}%`, width: c[2], animationDuration: `${c[3]}s`, animationDelay: `-${k * 23}s` }}>
-          <path d="M10 32c-7 0-9-9-3-11 1-8 11-10 16-5 3-8 16-9 20-1 6-6 17-3 17 5 7-1 12 3 10 8 6-2 11 2 9 7H10z" />
-          <path className="mist" d="M4 36h112" />
-        </svg>
-      ))}
+      {[[8, 10, 260, 90], [40, 24, 320, 120], [66, 6, 240, 100], [18, 52, 300, 140]].map((c, k) => <i className="cloud" key={k} style={{ left: `${c[0]}%`, top: `${c[1]}%`, width: c[2], height: c[2] / 4, animationDuration: `${c[3]}s`, animationDelay: `-${k * 23}s` }} />)}
       <svg className="fuji" viewBox="0 0 1200 300" preserveAspectRatio="xMidYMax slice">
         <path className="far" d="M0 300V230l140-30 120 25 150-50 130 40 120-35 160 45 140-30 240 20v85z" />
         <path className="mtn" d="M300 300L520 120l40-45c20-26 40-26 60 0l40 45 230 180z" />
