@@ -1,9 +1,9 @@
 import { FormEvent, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
 import { cartApi, read, rupiah, STATUS, useCart, useSession, write } from '../lib'
 import { useT } from '../i18n'
-import { Icon } from '../ui'
+import { Icon, PageBar } from '../ui'
 
 interface Done { order_number: string; access_token: string; grand_total: number; wa_url: string | null; warning: string | null }
 interface Saved { order_number: string; token: string }
@@ -14,6 +14,7 @@ async function errMsg(error: unknown, fallback: string) {
 
 export function Cart() {
   const t = useT()
+  const nav = useNavigate()
   const cart = useCart()
   const session = useSession()
   const [loy, setLoy] = useState(0)
@@ -105,6 +106,7 @@ export function Cart() {
 
   return (
     <form className="checkout" onSubmit={submit}>
+      <PageBar icon="cart" title={t('Keranjang')} />
       <h1 className="cohead">{t('Checkout Pesanan')}</h1>
 
       <section className="box">
@@ -172,6 +174,10 @@ export function Cart() {
 
       <label className="chk"><input type="checkbox" checked={f.agree} onChange={(e) => setF({ ...f, agree: e.target.checked })} />{t('Saya setuju dengan syarat transaksi toko.')}</label>
       <button className="btn lg wide paybtn" disabled={busy || bal === null || bal < total}>{busy ? t('Membuat pesanan...') : `${t('Konfirmasi Pesanan')} ${rupiah(total)}`}</button>
+      <div className="row cancelrow">
+        <Link className="btn ghost" to="/produk">{t('Lanjut Belanja')}</Link>
+        <button type="button" className="btn ghost bad" disabled={busy} onClick={() => { if (window.confirm(t('Batalkan checkout dan kosongkan keranjang?'))) { cartApi.clear(); nav('/produk') } }}>{t('Batalkan Checkout')}</button>
+      </div>
       {err && <p className="err c" role="alert">{err}</p>}
       <p className="muted c">{t('Pembayaran memakai saldo akun. Belum punya saldo? Isi saldo lewat QRIS atau transfer di menu Saldo.')}</p>
     </form>
