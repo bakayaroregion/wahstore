@@ -30,6 +30,7 @@ const ICONS = {
   heart: <path d="M12 20s-8-5-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 9c0 6-8 11-8 11z" />,
   share: <><circle cx="6" cy="12" r="2.5" /><circle cx="18" cy="6" r="2.5" /><circle cx="18" cy="18" r="2.5" /><path d="M8.2 10.8l7.6-3.6M8.2 13.2l7.6 3.6" /></>,
   gift: <><rect x="3" y="8" width="18" height="4" rx="1" /><path d="M5 12v9h14v-9M12 8v13M12 8S9 8 8 6a2.2 2.2 0 0 1 4-1c.6.8 0 3 0 3zM12 8s3 0 4-2a2.2 2.2 0 0 0-4-1c-.6.8 0 3 0 3z" /></>,
+  wallet: <><path d="M4 7a2 2 0 0 1 2-2h11v3" /><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M16 13.5h2" /></>,
   receipt: <path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6" />,
   logout: <path d="M9 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h4M16 8l4 4-4 4M20 12H9" />,
   search: <><circle cx="11" cy="11" r="6.5" /><path d="M16 16l5 5" /></>,

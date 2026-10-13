@@ -169,6 +169,12 @@ export function Account() {
       </div>
 
       <div className="box">
+        <h3>{t('Saldo Saya')}</h3>
+        <p className="muted">{t('Simpan saldo untuk bayar pesanan lebih cepat.')}</p>
+        <Link className="btn ghost wide refbtn" to="/saldo"><Icon n="wallet" size={15} /> {t('Kelola Saldo')}</Link>
+      </div>
+
+      <div className="box">
         <h3>{t('Diskon pelanggan setia')}</h3>
         <p className="muted">{t('Belanja setiap bulan dan diskon naik. Pesanan yang selesai pada bulan-bulan berturut-turut dihitung sampai bulan lalu.')}</p>
         {loy && <p className="ok">{t('Rangkaian Anda')}: {loy.streak} {t('bulan')}. {t('Diskon saat ini')}: {loy.percent}%.</p>}

@@ -17,7 +17,7 @@ const mask = (p: string) => p.length > 6 ? p.slice(0, 4) + '****' + p.slice(-2) 
 export default function Admin() {
   const [sess, setSess] = useState<Session | null | undefined>(undefined)
   const [roles, setRoles] = useState<string[] | null>(null)
-  const [tab, setTab] = useState<'dash' | 'orders' | 'products' | 'categories' | 'reviews' | 'customers' | 'staff' | 'content' | 'payments'>('dash')
+  const [tab, setTab] = useState<'dash' | 'orders' | 'products' | 'categories' | 'reviews' | 'customers' | 'staff' | 'content' | 'payments' | 'wallets'>('dash')
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSess(data.session))
     const { data } = supabase.auth.onAuthStateChange((_e, s) => setSess(s))
@@ -46,7 +46,8 @@ export default function Admin() {
         {manage && <button className="chip" aria-pressed={tab === 'categories'} onClick={() => setTab('categories')}>Kategori</button>}
         {manage && <button className="chip" aria-pressed={tab === 'reviews'} onClick={() => setTab('reviews')}>Testimoni</button>}
         {manage && <button className="chip" aria-pressed={tab === 'customers'} onClick={() => setTab('customers')}>Pelanggan</button>}
-        {manage && <button className="chip" aria-pressed={tab === 'payments'} onClick={() => setTab('payments')}>Pembayaran</button>}
+        {manage && <button className="chip" aria-pressed={tab === 'wallets'} onClick={() => setTab('wallets')}>Saldo</button>}
+        {manage && <button className="chip" aria-pressed={tab === 'payments'} onClick={() => setTab('payments')}>Rekening & QRIS</button>}
         {isSuper && <button className="chip" aria-pressed={tab === 'staff'} onClick={() => setTab('staff')}>Peran Admin</button>}
         {manage && <button className="chip" aria-pressed={tab === 'content'} onClick={() => setTab('content')}>Konten</button>}
       </nav>
@@ -56,6 +57,7 @@ export default function Admin() {
       {tab === 'categories' && manage && <Categories />}
       {tab === 'reviews' && manage && <Content part="reviews" />}
       {tab === 'customers' && manage && <Customers />}
+      {tab === 'wallets' && manage && <Wallets />}
       {tab === 'payments' && manage && <Payments />}
       {tab === 'staff' && isSuper && <Staff meId={sess.user.id} />}
       {tab === 'content' && manage && <Content part="settings" />}
@@ -95,7 +97,9 @@ function Orders({ ops, summaryOnly }: { ops: boolean; summaryOnly?: boolean }) {
     let note: string | null = null
     if (needReason) { note = window.prompt(`Alasan ${label.toLowerCase()} (wajib):`); if (!note?.trim()) return }
     else if (!window.confirm(`${label} untuk ${o.order_number}?`)) return
-    const { error } = await supabase.rpc('admin_transition', { p_order: o.id, p_kind: kind, p_new: to, p_note: note })
+    const { error } = to === 'REFUNDED' && kind === 'payment'
+      ? await supabase.rpc('admin_refund_order', { p_order: o.id, p_note: note })
+      : await supabase.rpc('admin_transition', { p_order: o.id, p_kind: kind, p_new: to, p_note: note })
     if (error) window.alert('Gagal: ' + error.message); else load()
   }
 
@@ -129,7 +133,7 @@ function Orders({ ops, summaryOnly }: { ops: boolean; summaryOnly?: boolean }) {
               <td>{o.customer_name}<div className="muted">{mask(o.customer_phone)}</div></td>
               <td>{o.order_items.map((i) => `${i.name_snapshot} x${i.quantity}`).join(', ')}</td>
               <td>{rupiah(o.grand_total)}</td>
-              <td><div>Pesanan: {STATUS[o.order_status]}</div><div>Bayar: {STATUS[o.payment_status]}</div>{o.payment_method && <div className="muted">{o.payment_method}</div>}<div>Proses: {STATUS[o.fulfillment_status]}</div></td>
+              <td><div>Pesanan: {STATUS[o.order_status]}</div><div>Bayar: {STATUS[o.payment_status]}</div>{o.payment_method && <div className="muted">{o.payment_method === 'WALLET' ? 'Saldo member' : o.payment_method}</div>}<div>Proses: {STATUS[o.fulfillment_status]}</div></td>
               {!summaryOnly && <td><div className="acts">
                 {o.proof_path && <button className="btn ghost sm" onClick={() => viewProof(o.proof_path!)}>Lihat bukti</button>}
                 <a className="btn ghost sm" href={`https://wa.me/${o.customer_phone}`} target="_blank" rel="noopener noreferrer">Buka WhatsApp</a>
@@ -144,6 +148,107 @@ function Orders({ ops, summaryOnly }: { ops: boolean; summaryOnly?: boolean }) {
             </tr>
           ))}
           {list.length === 0 && <tr><td colSpan={6} className="muted">Belum ada pesanan.</td></tr>}
+        </tbody>
+      </table></div>
+    </>
+  )
+}
+
+interface WRow { user_id: string; email: string; full_name: string; balance: number }
+interface WDep { id: string; user_id: string; user_email: string | null; amount: number; method_label: string; status: string; note: string | null; created_at: string }
+interface WTx { id: number; user_id: string; kind: string; amount: number; balance_after: number; note: string | null; created_at: string }
+const WKIND: Record<string, string> = { DEPOSIT: 'Isi saldo', PURCHASE: 'Pembelian', REFUND: 'Refund', ADJUST: 'Penyesuaian admin' }
+
+function Wallets() {
+  const [members, setMembers] = useState<WRow[]>([])
+  const [deps, setDeps] = useState<WDep[]>([])
+  const [txs, setTxs] = useState<WTx[]>([])
+  const [q, setQ] = useState('')
+  const [pick, setPick] = useState<WRow | null>(null)
+  const [mode, setMode] = useState<'add' | 'sub'>('add')
+  const [amount, setAmount] = useState('')
+  const [note, setNote] = useState('')
+  const [msg, setMsg] = useState('')
+  const [err, setErr] = useState('')
+  const [busy, setBusy] = useState(false)
+  const load = useCallback(() => {
+    supabase.rpc('admin_wallets').then(({ data }) => setMembers((data ?? []) as WRow[]))
+    supabase.from('wallet_deposits').select('id,user_id,user_email,amount,method_label,status,note,created_at').order('created_at', { ascending: false }).limit(50).then(({ data }) => setDeps((data ?? []) as WDep[]))
+    supabase.from('wallet_transactions').select('id,user_id,kind,amount,balance_after,note,created_at').order('id', { ascending: false }).limit(50).then(({ data }) => setTxs((data ?? []) as WTx[]))
+  }, [])
+  useEffect(load, [load])
+  const mail = (id: string) => members.find((m) => m.user_id === id)?.email ?? id.slice(0, 8)
+  const amt = Math.floor(Number(amount.replace(/\D/g, '')) || 0)
+  const found = q.trim() ? members.filter((m) => (m.email + ' ' + m.full_name).toLowerCase().includes(q.trim().toLowerCase())).slice(0, 8) : []
+
+  async function adjust(e: FormEvent) {
+    e.preventDefault(); setErr(''); setMsg('')
+    if (!pick) { setErr('Pilih member dulu.'); return }
+    if (amt < 1 || amt > 10000000) { setErr('Nominal harus 1 sampai 10.000.000.'); return }
+    if (!note.trim()) { setErr('Alasan wajib diisi.'); return }
+    if (!window.confirm(`${mode === 'add' ? 'Tambah' : 'Kurangi'} saldo ${pick.email} sebesar ${rupiah(amt)}?`)) return
+    setBusy(true)
+    const { error } = await supabase.rpc('admin_adjust_wallet', { p_user: pick.user_id, p_amount: mode === 'add' ? amt : -amt, p_note: note.trim() })
+    setBusy(false)
+    if (error) { setErr(error.message.includes('INSUFFICIENT') ? 'Saldo member tidak cukup untuk dikurangi.' : 'Gagal: ' + error.message); return }
+    setMsg(`Saldo ${pick.email} diperbarui.`); setAmount(''); setNote(''); setPick(null); setQ(''); load()
+  }
+  async function review(d: WDep, approve: boolean) {
+    let n: string | null = null, a: number | null = null
+    if (approve) {
+      const v = window.prompt(`Nominal yang benar-benar diterima dari ${d.user_email ?? 'member'} (pengajuan ${rupiah(d.amount)}):`, String(d.amount))
+      if (v === null) return
+      a = Math.floor(Number(v.replace(/\D/g, '')) || 0)
+      if (a < 1000) { window.alert('Nominal tidak valid.'); return }
+      n = window.prompt('Catatan (opsional):') || null
+    } else { n = window.prompt('Alasan penolakan (wajib):'); if (!n?.trim()) return }
+    const { error } = await supabase.rpc('admin_review_deposit', { p_id: d.id, p_approve: approve, p_note: n, p_amount: a })
+    if (error) window.alert('Gagal: ' + error.message); else load()
+  }
+  const pending = deps.filter((d) => d.status === 'PENDING')
+  return (
+    <>
+      <p className="muted">Alur: member bayar (QRIS / transfer), kirim bukti ke WhatsApp dengan kode TOP-xxxx. Cek bukti, lalu setujui pengajuan di bawah atau tambah saldo manual.</p>
+
+      <h2>Pengajuan isi saldo ({pending.length} menunggu)</h2>
+      <div className="tw"><table>
+        <thead><tr><th>Kode</th><th>Member</th><th>Nominal</th><th>Metode</th><th>Waktu</th><th></th></tr></thead>
+        <tbody>
+          {pending.map((d) => (
+            <tr key={d.id}><td className="mono">TOP-{d.id.slice(0, 8).toUpperCase()}</td><td>{d.user_email ?? mail(d.user_id)}</td><td>{rupiah(d.amount)}</td><td>{d.method_label}</td><td>{new Date(d.created_at).toLocaleString('id-ID')}</td>
+              <td><div className="acts"><button className="btn sm" onClick={() => review(d, true)}>Setujui</button><button className="btn bad sm" onClick={() => review(d, false)}>Tolak</button></div></td></tr>
+          ))}
+          {pending.length === 0 && <tr><td colSpan={6} className="muted">Tidak ada pengajuan yang menunggu.</td></tr>}
+        </tbody>
+      </table></div>
+
+      <h2>Tambah / kurangi saldo member</h2>
+      <form className="box formgrid" onSubmit={adjust}>
+        <label className="wide">Cari member (email atau nama)<input value={q} onChange={(e) => { setQ(e.target.value); setPick(null) }} placeholder="contoh: budi@gmail.com" /></label>
+        {!pick && found.length > 0 && <div className="wide chips">{found.map((m) => <button type="button" key={m.user_id} className="chip" onClick={() => { setPick(m); setQ(m.email) }}>{m.email} • {rupiah(m.balance)}</button>)}</div>}
+        {pick && <p className="wide ok">Dipilih: <b>{pick.email}</b> • saldo sekarang {rupiah(pick.balance)}</p>}
+        <label>Jenis<select value={mode} onChange={(e) => setMode(e.target.value as 'add' | 'sub')}><option value="add">Tambah saldo</option><option value="sub">Kurangi saldo (koreksi)</option></select></label>
+        <label>Nominal (Rp)<input inputMode="numeric" value={amt ? rupiah(amt) : ''} onChange={(e) => setAmount(e.target.value)} placeholder="Rp 50.000" /></label>
+        <label className="wide">Alasan / catatan (wajib)<input value={note} maxLength={200} onChange={(e) => setNote(e.target.value)} placeholder="mis. TOP-1A2B3C4D transfer BNI" /></label>
+        {err && <p className="err wide" role="alert">{err}</p>}{msg && <p className="ok wide" role="status">{msg}</p>}
+        <div className="row wide"><button className="btn" disabled={busy}>{busy ? 'Menyimpan...' : 'Simpan saldo'}</button></div>
+      </form>
+
+      <h2>Saldo member</h2>
+      <div className="tw"><table>
+        <thead><tr><th>Member</th><th>Saldo</th></tr></thead>
+        <tbody>
+          {members.filter((m) => m.balance > 0).map((m) => <tr key={m.user_id}><td>{m.email}<div className="muted">{m.full_name}</div></td><td>{rupiah(m.balance)}</td></tr>)}
+          {members.every((m) => m.balance === 0) && <tr><td colSpan={2} className="muted">Belum ada member dengan saldo.</td></tr>}
+        </tbody>
+      </table></div>
+
+      <h2>Riwayat saldo terbaru</h2>
+      <div className="tw"><table>
+        <thead><tr><th>Waktu</th><th>Member</th><th>Jenis</th><th>Jumlah</th><th>Saldo akhir</th><th>Catatan</th></tr></thead>
+        <tbody>
+          {txs.map((x) => <tr key={x.id}><td>{new Date(x.created_at).toLocaleString('id-ID')}</td><td>{mail(x.user_id)}</td><td>{WKIND[x.kind] ?? x.kind}</td><td className={x.amount > 0 ? 'ok' : 'err'}>{x.amount > 0 ? '+' : '-'} {rupiah(Math.abs(x.amount))}</td><td>{rupiah(x.balance_after)}</td><td>{x.note ?? ''}</td></tr>)}
+          {txs.length === 0 && <tr><td colSpan={6} className="muted">Belum ada transaksi saldo.</td></tr>}
         </tbody>
       </table></div>
     </>
@@ -180,7 +285,7 @@ function Payments() {
   const set = (k: keyof PM, v: unknown) => setF((x) => (x ? { ...x, [k]: v } : x))
   return (
     <>
-      <p className="muted">Isi dengan data rekening dan QRIS asli milik toko. Pembeli melihatnya saat checkout. Bukti transfer pembeli muncul di menu Pesanan (tombol Lihat bukti).</p>
+      <p className="muted">Isi dengan data rekening dan QRIS asli milik toko. Member melihatnya di halaman Saldo saat isi saldo. Hilangkan centang Tampilkan untuk menonaktifkan rekening tanpa menghapusnya.</p>
       <button className="btn" onClick={() => setF({ ...blankPM })}>Tambah metode</button>
       {f && (
         <form className="box formgrid" onSubmit={save}>

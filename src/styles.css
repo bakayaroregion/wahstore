@@ -380,3 +380,12 @@ input,select,textarea{max-width:100%}
 .adm .stats{grid-template-columns:repeat(3,minmax(0,1fr))}
 @media(max-width:640px){.adm .stats{grid-template-columns:repeat(2,minmax(0,1fr))}.adm .bar{flex-wrap:nowrap}}
 @media(max-width:380px){.adm .stats{grid-template-columns:1fr}}
+
+.walletcard{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.walletbal{font-size:clamp(28px,8vw,40px);line-height:1.1}
+.wstat{font-size:12px;font-weight:700;padding:3px 10px;border-radius:99px;white-space:nowrap;border:1px solid var(--bd)}
+.wstat.approved{color:#34d399;border-color:#34d399}.wstat.rejected{color:#f87171;border-color:#f87171}.wstat.pending{color:#fbbf24;border-color:#fbbf24}
+.refpage .line{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--bd)}
+.refpage .line:last-child{border-bottom:0}.refpage .line>span:last-child{text-align:right}
+@media(max-width:400px){.bar nav.in{gap:5px}.iconbtn{width:30px;height:30px}.iconbtn svg{width:15px;height:15px}}
+.okbox{border-color:rgba(34,197,94,.5)}

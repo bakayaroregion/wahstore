@@ -9,6 +9,7 @@ import { Cart, Check } from './pages/Cart'
 import { Account, Login, Register } from './pages/Auth'
 import Admin from './pages/Admin'
 import { Referral } from './pages/Referral'
+import { Wallet } from './pages/Wallet'
 
 function Shell() {
   const cart = useCart()
@@ -39,7 +40,7 @@ function Shell() {
       <Space />
       <header className="top"><div className={'wrap bar' + (wide ? ' wide' : '')}>
         <Link to="/" className="brand"><Logo url={brand.logo} /><span>{brand.name}<small>{brand.tagline}</small></span></Link>
-        <nav>
+        <nav className={session ? 'in' : 'out'}>
           {!session && <><LangMenu /><ThemeToggle /></>}
           {session ? (
             <>
@@ -47,6 +48,7 @@ function Shell() {
               <LangMenu />
               <ThemeToggle />
               <Link to="/referral" className="iconbtn" aria-label={t('Program Referral')} title={t('Program Referral')}><Icon n="gift" size={17} /></Link>
+              <Link to="/saldo" className="iconbtn" aria-label={t('Saldo')} title={t('Saldo')}><Icon n="wallet" size={17} /></Link>
               <Link to="/favorit" className="iconbtn" aria-label={t('Favorit')} title={t('Favorit')}><Icon n="heart" size={17} />{favCount > 0 && <b className="cnt">{favCount}</b>}</Link>
               <Link to="/cek" className="iconbtn" aria-label={t('Cek pesanan')} title={t('Cek pesanan')}><Icon n="receipt" size={17} /></Link>
               <Link to="/akun" className="iconbtn" aria-label={t('Akun')} title={t('Akun')}><Icon n="user" size={17} /></Link>
@@ -65,6 +67,7 @@ function Shell() {
           <Route path="/produk/:slug" element={<ProductPage />} />
           <Route path="/referral" element={<Referral />} />
           <Route path="/favorit" element={<Favorites />} />
+          <Route path="/saldo" element={<Wallet />} />
           <Route path="/keranjang" element={<Cart />} />
           <Route path="/cek" element={<Check />} />
           <Route path="/masuk" element={<Login />} />
