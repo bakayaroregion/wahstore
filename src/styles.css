@@ -406,15 +406,11 @@ body{background:radial-gradient(900px 560px at 30% 4%,rgba(124,58,237,.30),trans
 @keyframes constglow{0%,100%{opacity:.35}50%{opacity:1}}
 .node{position:absolute;width:5px;height:5px;margin:-2.5px 0 0 -2.5px;border-radius:50%;background:#dfe8ff;box-shadow:0 0 8px 2px rgba(150,180,255,.8);animation:nodeglow 5s ease-in-out infinite}
 @keyframes nodeglow{0%,100%{opacity:.5}50%{opacity:1}}
-.petal,.bird,.fuji{display:none}
+.bird{display:none}
 
 /* ===== Tema siang: langit biru, matahari besar bersinar, awan lembut, burung terbang; sentuhan Jepang: Fuji dan sakura ===== */
 :root[data-theme=light] .orb,:root[data-theme=light] .node{display:none}
 :root[data-theme=light] .sun{display:block;right:6%;top:30px;width:230px;height:230px}
-:root[data-theme=light] .fuji{display:block;position:absolute;left:0;bottom:0;width:100%;height:32vh;min-height:160px;opacity:.55}
-.fuji .far{fill:#b9d3e8}.fuji .mtn{fill:#8aa8cb}.fuji .cap{fill:#fff}.fuji .near{fill:#a9c9bb}
-:root[data-theme=light] .petal{display:block;position:absolute;top:-6%;border-radius:150% 0 150% 0;background:linear-gradient(135deg,#ffd9e4,#ffa9c0);opacity:.75;animation:petalfall 14s linear infinite;will-change:transform}
-@keyframes petalfall{0%{transform:translate(0,-6vh) rotate(0)}25%{transform:translate(30px,28vh) rotate(120deg)}50%{transform:translate(-20px,55vh) rotate(240deg)}75%{transform:translate(35px,82vh) rotate(330deg)}100%{transform:translate(-10px,110vh) rotate(420deg)}}
 :root[data-theme=light] .bird{display:block;position:absolute;left:-60px;width:36px;height:18px;fill:none;stroke:#27324a;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;animation:birdfly 22s linear infinite;will-change:transform}
 .bird path{transform-box:fill-box;transform-origin:center bottom;animation:flap .8s ease-in-out infinite}
 @keyframes flap{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.35)}}
@@ -424,12 +420,17 @@ body{background:radial-gradient(900px 560px at 30% 4%,rgba(124,58,237,.30),trans
 .tile{width:calc(var(--s,34) * 1px);height:calc(var(--s,34) * 1px);border-radius:11px;opacity:.7}
 .tile img{width:52%;height:52%}
 :root[data-theme=light] .tile{opacity:.6}
-@media(max-width:720px){.tile{width:calc(var(--s,34) * .85px);height:calc(var(--s,34) * .85px);opacity:.28}.tile:nth-of-type(even){display:none}:root[data-theme=light] .sun{width:110px;height:110px;right:4%;top:64px}:root[data-theme=light] .fuji{height:24vh}}
+@media(max-width:720px){.tile{width:calc(var(--s,34) * .85px);height:calc(var(--s,34) * .85px);opacity:.28}.tile:nth-of-type(even){display:none}:root[data-theme=light] .sun{width:110px;height:110px;right:4%;top:64px}}
 @media(prefers-reduced-motion:reduce){.star,.orb,.node,.const polyline,.petal,.bird,.bird path,.cloud{animation:none}}
 
-/* Awan siang: gumpalan lembut transparan yang bertumpuk; posisi tetap, bergoyang naik-turun dan melebar-menyempit tertiup angin */
+/* ===== Tema siang meniru referensi: langit biru-cyan, matahari besar berkas sinar, awan tipis memanjang tertiup angin, burung kecil ===== */
+:root[data-theme=light] body{background:radial-gradient(900px 420px at 42% -6%,rgba(140,150,235,.38),transparent 72%),linear-gradient(180deg,#80c9ea 0%,#a9dbee 28%,#d3edf8 58%,#ecf7fe 82%,#f6fbff 100%);background-attachment:fixed}
+:root[data-theme=light] .sun{display:block;right:4%;top:-70px;width:300px;height:300px}
+:root[data-theme=light] .sun::before{inset:-150px;background:repeating-conic-gradient(rgba(255,226,150,.75) 0 2.5deg,transparent 2.5deg 11deg)}
+:root[data-theme=light] .bird{width:30px;height:15px;stroke-width:3.4}
 .cloudg{display:none}
 :root[data-theme=light] .cloudg{display:block;position:absolute}
-.puff{position:absolute;border-radius:50%;background:radial-gradient(ellipse at 50% 50%,rgba(255,255,255,.95) 0%,rgba(255,255,255,.7) 38%,rgba(255,255,255,0) 72%);filter:blur(5px);animation:puffwind ease-in-out infinite alternate;will-change:transform,opacity}
-@keyframes puffwind{0%{transform:translate(-8px,-20px) scale(.94,.9);opacity:.55}50%{transform:translate(6px,6px) scale(1.08,1);opacity:.95}100%{transform:translate(-4px,22px) scale(1.16,1.12);opacity:.7}}
+.puff{position:absolute;border-radius:50%;background:radial-gradient(ellipse at 50% 50%,rgba(255,255,255,1) 0%,rgba(255,255,255,.8) 42%,rgba(255,255,255,0) 76%);filter:blur(4px);animation:puffwind ease-in-out infinite alternate;will-change:transform,opacity}
+@keyframes puffwind{0%{transform:translate(-10px,-18px) scale(.92,.85);opacity:.65}50%{transform:translate(8px,5px) scale(1.12,1);opacity:1}100%{transform:translate(-5px,20px) scale(1.22,1.1);opacity:.8}}
 @media(prefers-reduced-motion:reduce){.puff{animation:none}}
+@media(max-width:720px){:root[data-theme=light] .sun{width:170px;height:170px;top:-30px;right:-10px}:root[data-theme=light] .sun::before{inset:-80px}}

@@ -106,8 +106,6 @@ function BrandTile({ b, i }: { b: Brand; i: number }) {
 const METEORS = [[95, 2, 6, 0, 150], [70, -5, 7, 2, 210], [45, 8, 8, 5, 120], [100, 25, 5, 1, 180], [82, 12, 9, 7, 140], [60, 30, 6, 3, 240], [30, -8, 7, 4, 130], [110, 40, 8, 6, 200], [15, 15, 9, 8, 110],
   [88, -2, 5.5, 2.5, 170], [52, -6, 6.5, 6.5, 230], [105, 8, 7.5, 3.5, 100], [75, 20, 8.5, 9, 190], [38, 2, 9.5, 1.5, 150], [92, 34, 6, 5.5, 125], [22, -4, 7, 7.5, 175]]
 
-// Ranting pohon sakura dan burung untuk tema siang bergaya Jepang.
-const PETALS = Array.from({ length: 12 }, (_, k) => ({ x: (k * 4.7 + (k % 3) * 2.1) % 100, d: 11 + (k * 7) % 9, w: (k * 3.3) % 14, s: 8 + (k * 5) % 8 }))
 const BIRDS = [[14, 26, 0, 11], [22, 70, 9, 15], [9, 40, 5, 19], [18, 58, 14, 13], [12, 33, 2, 17]]
 
 // Latar angkasa dekoratif: bintang diam, bintang jatuh, dan ubin ikon aplikasi yang melayang.
@@ -122,8 +120,8 @@ const CONSTS = [
 ]
 
 // Awan siang: kumpulan gumpalan transparan yang saling tumpuk. Posisi tetap, tiap gumpalan bergoyang sendiri seperti tertiup angin.
-const CLOUDS = [[3, 8, 360], [28, 20, 420], [56, 4, 320], [70, 28, 400], [4, 44, 340], [40, 40, 440], [82, 10, 300]]
-const PUFFS = [[0, 25, 58, 62], [22, 0, 52, 78], [44, 28, 58, 62], [14, 42, 66, 52], [60, 8, 40, 56]]
+const CLOUDS = [[-6, 14, 380], [24, 8, 300], [60, 6, 340], [-4, 50, 360], [30, 47, 420], [66, 52, 400], [80, 30, 360], [44, 28, 300], [14, 70, 340], [58, 74, 380]]
+const PUFFS = [[0, 30, 70, 34], [18, 12, 64, 40], [38, 38, 70, 32], [8, 52, 80, 28], [52, 22, 46, 30]]
 
 export function Space() {
   const stars = useMemo(() => {
@@ -143,17 +141,10 @@ export function Space() {
       {CONSTS.flat().map((p, k) => <i className="node" key={k} style={{ left: `${p[0]}%`, top: `${p[1]}%`, animationDelay: `-${(k % 6) * 0.9}s` }} />)}
       <div className="sun" />
       {CLOUDS.map((c, k) => (
-        <span className="cloudg" key={k} style={{ left: `${c[0]}%`, top: `${c[1]}%`, width: c[2], height: c[2] * 0.42 }}>
+        <span className="cloudg" key={k} style={{ left: `${c[0]}%`, top: `${c[1]}%`, width: c[2], height: c[2] * 0.26 }}>
           {PUFFS.map((q, j) => <i className="puff" key={j} style={{ left: `${q[0]}%`, top: `${q[1]}%`, width: `${q[2]}%`, height: `${q[3]}%`, animationDuration: `${3.4 + ((k + j) % 4) * 1.1}s`, animationDelay: `-${(k * 1.7 + j * 0.9).toFixed(1)}s` }} />)}
         </span>
       ))}
-      <svg className="fuji" viewBox="0 0 1200 300" preserveAspectRatio="xMidYMax slice">
-        <path className="far" d="M0 300V230l140-30 120 25 150-50 130 40 120-35 160 45 140-30 240 20v85z" />
-        <path className="mtn" d="M300 300L520 120l40-45c20-26 40-26 60 0l40 45 230 180z" />
-        <path className="cap" d="M520 120l40-45c20-26 40-26 60 0l40 45-30-8-25 14-25-16-25 16-25-14z" />
-        <path className="near" d="M0 300v-55c120-30 240-20 380 5s260 10 420-15 280-20 400 5v60z" />
-      </svg>
-      {PETALS.map((p, k) => <i className="petal" key={k} style={{ left: `${p.x}%`, width: p.s, height: p.s * 0.8, animationDuration: `${p.d}s`, animationDelay: `-${p.w}s` }} />)}
       {BIRDS.map((b, k) => (
         <svg className="bird" key={k} viewBox="0 0 40 20" style={{ top: `${b[1]}%`, animationDuration: `${b[3]}s`, animationDelay: `-${b[2]}s` }}>
           <path d="M2 14Q10 2 20 12Q30 2 38 14" />
