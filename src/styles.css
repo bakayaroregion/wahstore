@@ -426,3 +426,8 @@ body{background:radial-gradient(900px 560px at 30% 4%,rgba(124,58,237,.30),trans
 :root[data-theme=light] .tile{opacity:.6}
 @media(max-width:720px){.tile{width:calc(var(--s,34) * .85px);height:calc(var(--s,34) * .85px);opacity:.28}.tile:nth-of-type(even){display:none}:root[data-theme=light] .sun{width:110px;height:110px;right:4%;top:64px}:root[data-theme=light] .fuji{height:24vh}}
 @media(prefers-reduced-motion:reduce){.star,.orb,.node,.const polyline,.petal,.bird,.bird path,.cloud{animation:none}}
+
+/* Awan siang: melintas dari kiri ke kanan terus-menerus sambil naik-turun pelan */
+:root[data-theme=light] .cloud{left:0;animation-name:cloudpass,cloudbob;animation-timing-function:linear,ease-in-out;animation-iteration-count:infinite,infinite;animation-direction:normal,alternate;opacity:.92;will-change:translate,transform}
+@keyframes cloudpass{from{translate:-35vw 0}to{translate:112vw 0}}
+@keyframes cloudbob{from{transform:translateY(-8px) scale(1)}to{transform:translateY(10px) scale(1.06)}}
