@@ -423,14 +423,21 @@ body{background:radial-gradient(900px 560px at 30% 4%,rgba(124,58,237,.30),trans
 @media(max-width:720px){.tile{width:calc(var(--s,34) * .85px);height:calc(var(--s,34) * .85px);opacity:.28}.tile:nth-of-type(even){display:none}:root[data-theme=light] .sun{width:110px;height:110px;right:4%;top:64px}}
 @media(prefers-reduced-motion:reduce){.star,.orb,.node,.const polyline,.petal,.bird,.bird path,.cloud{animation:none}}
 
-/* ===== Tema siang meniru referensi: langit biru-cyan, matahari besar berkas sinar, awan tipis memanjang tertiup angin, burung kecil ===== */
-:root[data-theme=light] body{background:radial-gradient(900px 420px at 42% -6%,rgba(140,150,235,.38),transparent 72%),linear-gradient(180deg,#80c9ea 0%,#a9dbee 28%,#d3edf8 58%,#ecf7fe 82%,#f6fbff 100%);background-attachment:fixed}
-:root[data-theme=light] .sun{display:block;right:4%;top:-70px;width:300px;height:300px}
-:root[data-theme=light] .sun::before{inset:-150px;background:repeating-conic-gradient(rgba(255,226,150,.75) 0 2.5deg,transparent 2.5deg 11deg)}
-:root[data-theme=light] .bird{width:30px;height:15px;stroke-width:3.4}
+/* ===== Tema siang: senja bergaya Jepang. Matahari setengah tenggelam di balik pegunungan, awan terombang-ambing angin kencang ===== */
+:root[data-theme=light] body{background:radial-gradient(900px 420px at 42% -6%,rgba(140,150,235,.32),transparent 72%),linear-gradient(180deg,#6fb8e6 0%,#9cd0ee 30%,#cfe6f2 52%,#fbe6cf 72%,#ffcf9f 88%,#ffb98a 100%);background-attachment:fixed}
+:root[data-theme=light]{--horizon:31vh}
+:root[data-theme=light] .sun{display:block;left:27%;right:auto;top:auto;bottom:calc(var(--horizon) - 105px);width:260px;height:260px;margin-left:-130px;background:radial-gradient(circle at 50% 45%,#fff6cf 0%,#ffd36b 38%,#ff9a45 72%,#ff6f3c 100%);box-shadow:0 0 90px 46px rgba(255,150,70,.55);animation:sunpulse 4.5s ease-in-out infinite alternate}
+:root[data-theme=light] .sun::before{inset:-150px;background:repeating-conic-gradient(rgba(255,205,120,.8) 0 2.5deg,transparent 2.5deg 11deg)}
+@keyframes sunpulse{from{transform:scale(1);box-shadow:0 0 80px 38px rgba(255,150,70,.5)}to{transform:scale(1.07);box-shadow:0 0 120px 66px rgba(255,170,90,.7)}}
+.fuji{display:none}
+:root[data-theme=light] .fuji{display:block;position:absolute;left:0;bottom:0;width:100%;height:50vh;min-height:260px}
+.mist{fill:#fff;opacity:.38;filter:blur(7px);animation:mistsway 9s ease-in-out infinite alternate}
+.mist.m2{animation-duration:12s;opacity:.3}
+@keyframes mistsway{from{transform:translateX(-40px)}to{transform:translateX(40px)}}
+:root[data-theme=light] .bird{width:30px;height:15px;stroke-width:3.4;stroke:#3a2f4d}
 .cloudg{display:none}
 :root[data-theme=light] .cloudg{display:block;position:absolute}
 .puff{position:absolute;border-radius:50%;background:radial-gradient(ellipse at 50% 50%,rgba(255,255,255,1) 0%,rgba(255,255,255,.8) 42%,rgba(255,255,255,0) 76%);filter:blur(4px);animation:puffwind ease-in-out infinite alternate;will-change:transform,opacity}
-@keyframes puffwind{0%{transform:translate(-10px,-18px) scale(.92,.85);opacity:.65}50%{transform:translate(8px,5px) scale(1.12,1);opacity:1}100%{transform:translate(-5px,20px) scale(1.22,1.1);opacity:.8}}
-@media(prefers-reduced-motion:reduce){.puff{animation:none}}
-@media(max-width:720px){:root[data-theme=light] .sun{width:170px;height:170px;top:-30px;right:-10px}:root[data-theme=light] .sun::before{inset:-80px}}
+@keyframes puffwind{0%{transform:translate(-14px,-30px) scale(.9,.8);opacity:.6}50%{transform:translate(10px,8px) scale(1.18,1);opacity:1}100%{transform:translate(-6px,32px) scale(1.3,1.16);opacity:.8}}
+@media(prefers-reduced-motion:reduce){.puff,.mist,:root[data-theme=light] .sun{animation:none}}
+@media(max-width:720px){:root[data-theme=light]{--horizon:14vh}:root[data-theme=light] .sun{width:150px;height:150px;margin-left:-75px;left:50%;bottom:calc(var(--horizon) - 70px)}:root[data-theme=light] .sun::before{inset:-80px}:root[data-theme=light] .fuji{height:32vh}}

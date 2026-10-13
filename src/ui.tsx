@@ -142,9 +142,24 @@ export function Space() {
       <div className="sun" />
       {CLOUDS.map((c, k) => (
         <span className="cloudg" key={k} style={{ left: `${c[0]}%`, top: `${c[1]}%`, width: c[2], height: c[2] * 0.26 }}>
-          {PUFFS.map((q, j) => <i className="puff" key={j} style={{ left: `${q[0]}%`, top: `${q[1]}%`, width: `${q[2]}%`, height: `${q[3]}%`, animationDuration: `${3.4 + ((k + j) % 4) * 1.1}s`, animationDelay: `-${(k * 1.7 + j * 0.9).toFixed(1)}s` }} />)}
+          {PUFFS.map((q, j) => <i className="puff" key={j} style={{ left: `${q[0]}%`, top: `${q[1]}%`, width: `${q[2]}%`, height: `${q[3]}%`, animationDuration: `${1.9 + ((k + j) % 4) * 0.7}s`, animationDelay: `-${(k * 1.7 + j * 0.9).toFixed(1)}s` }} />)}
         </span>
       ))}
+      <svg className="fuji" viewBox="0 0 1200 300" preserveAspectRatio="xMidYMax slice">
+        <defs>
+          <linearGradient id="gFar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#d9bfe0" /><stop offset="1" stopColor="#f3c7c0" /></linearGradient>
+          <linearGradient id="gFuji" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#8f93d6" /><stop offset=".55" stopColor="#7d86c8" /><stop offset="1" stopColor="#c99fc4" /></linearGradient>
+          <linearGradient id="gMid" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#7482bd" /><stop offset="1" stopColor="#b48fb8" /></linearGradient>
+          <linearGradient id="gNear" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#4f6c9c" /><stop offset="1" stopColor="#3f4f80" /></linearGradient>
+        </defs>
+        <path d="M0 300V175l90-38 80 28 100-52 90 62 90 12 100-48 110 70 120-34 130-56 110 52 90-20 90 24v95z" fill="url(#gFar)" opacity=".9" />
+        <ellipse className="mist m1" cx="300" cy="215" rx="260" ry="14" />
+        <path d="M500 300C585 205 680 112 733 82c14-8 38-8 52 0 50 30 150 122 235 218z" fill="url(#gFuji)" />
+        <path d="M733 82c14-8 38-8 52 0 14 8 26 20 40 38l-22-8-17 17-19-15-19 16-19-16-21 10c10-14 18-24 25-42z" fill="#fff" opacity=".95" />
+        <path d="M0 300v-95l110-30 130 40 120-35 150 30 130-28 160 40 140-30 260 25v83z" fill="url(#gMid)" />
+        <ellipse className="mist m2" cx="880" cy="238" rx="300" ry="13" />
+        <path d="M0 300v-52c130-26 250-12 390 10s280 6 440-14 250-14 370 8v48z" fill="url(#gNear)" />
+      </svg>
       {BIRDS.map((b, k) => (
         <svg className="bird" key={k} viewBox="0 0 40 20" style={{ top: `${b[1]}%`, animationDuration: `${b[3]}s`, animationDelay: `-${b[2]}s` }}>
           <path d="M2 14Q10 2 20 12Q30 2 38 14" />
