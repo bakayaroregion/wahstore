@@ -121,6 +121,10 @@ const CONSTS = [
   [[18, 60], [22, 66], [28, 63]],
 ]
 
+// Awan siang: kumpulan gumpalan transparan yang saling tumpuk. Posisi tetap, tiap gumpalan bergoyang sendiri seperti tertiup angin.
+const CLOUDS = [[3, 8, 360], [28, 20, 420], [56, 4, 320], [70, 28, 400], [4, 44, 340], [40, 40, 440], [82, 10, 300]]
+const PUFFS = [[0, 25, 58, 62], [22, 0, 52, 78], [44, 28, 58, 62], [14, 42, 66, 52], [60, 8, 40, 56]]
+
 export function Space() {
   const stars = useMemo(() => {
     let s = 7; const r = () => (s = (s * 16807) % 2147483647) / 2147483647
@@ -138,8 +142,10 @@ export function Space() {
       <svg className="const" viewBox="0 0 100 100" preserveAspectRatio="none">{CONSTS.map((c, k) => <polyline key={k} points={c.map((p) => p.join(',')).join(' ')} style={{ animationDelay: `-${k * 1.7}s` }} />)}</svg>
       {CONSTS.flat().map((p, k) => <i className="node" key={k} style={{ left: `${p[0]}%`, top: `${p[1]}%`, animationDelay: `-${(k % 6) * 0.9}s` }} />)}
       <div className="sun" />
-      {[[4, 9, 300, 3.6], [30, 22, 380, 4.8], [58, 5, 260, 3.2], [72, 30, 340, 5.4], [8, 46, 280, 4.2], [44, 40, 360, 3.9], [84, 12, 240, 4.6]].map((c, k) => (
-        <i className="cloud" key={k} style={{ left: `${c[0]}%`, top: `${c[1]}%`, width: c[2], height: c[2] / 3.6, animationDuration: `${c[3]}s`, animationDelay: `-${k * 0.9}s` }} />
+      {CLOUDS.map((c, k) => (
+        <span className="cloudg" key={k} style={{ left: `${c[0]}%`, top: `${c[1]}%`, width: c[2], height: c[2] * 0.42 }}>
+          {PUFFS.map((q, j) => <i className="puff" key={j} style={{ left: `${q[0]}%`, top: `${q[1]}%`, width: `${q[2]}%`, height: `${q[3]}%`, animationDuration: `${3.4 + ((k + j) % 4) * 1.1}s`, animationDelay: `-${(k * 1.7 + j * 0.9).toFixed(1)}s` }} />)}
+        </span>
       ))}
       <svg className="fuji" viewBox="0 0 1200 300" preserveAspectRatio="xMidYMax slice">
         <path className="far" d="M0 300V230l140-30 120 25 150-50 130 40 120-35 160 45 140-30 240 20v85z" />
