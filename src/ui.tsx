@@ -64,51 +64,76 @@ interface Brand { slug: string; bg: string; dark: boolean; x: number; y: number;
 // Ikon dari Simple Icons (lisensi CC0) di /public/brands. Tambah atau hapus baris untuk mengatur ikon yang melayang.
 // Nama dan logo adalah merek dagang pemiliknya masing-masing.
 const BRANDS: Brand[] = [
-  // baris atas (sejajar area judul)
-  { slug: 'netflix', bg: '#E50914', dark: false, x: 6, y: 16, s: 42, d: 8, dx: 8, dy: -14 },
-  { slug: 'spotify', bg: '#1DB954', dark: false, x: 19, y: 12, s: 40, d: 9, dx: -6, dy: 12 },
-  { slug: 'youtube', bg: '#FF0000', dark: false, x: 31, y: 19, s: 38, d: 10, dx: 10, dy: -10 },
-  { slug: 'canva', bg: '#00A7B5', dark: false, x: 43, y: 15, s: 38, d: 7, dx: -8, dy: -12 },
-  { slug: 'discord', bg: '#5865F2', dark: false, x: 56, y: 17, s: 40, d: 11, dx: 8, dy: 12 },
-  { slug: 'twitch', bg: '#9146FF', dark: false, x: 69, y: 14, s: 38, d: 9, dx: 10, dy: -10 },
-  { slug: 'tiktok', bg: '#161616', dark: false, x: 81, y: 16, s: 40, d: 8, dx: -8, dy: 14 },
-  { slug: 'x', bg: '#161616', dark: false, x: 93, y: 17, s: 38, d: 10, dx: 8, dy: -12 },
-  // baris tengah (sejajar tombol)
-  { slug: 'facebook', bg: '#0866FF', dark: false, x: 7, y: 62, s: 38, d: 9, dx: -10, dy: 10 },
-  { slug: 'telegram', bg: '#26A5E4', dark: false, x: 20, y: 58, s: 40, d: 11, dx: 6, dy: -14 },
-  { slug: 'whatsapp', bg: '#25D366', dark: false, x: 31, y: 63, s: 38, d: 8, dx: -8, dy: -10 },
-  { slug: 'pinterest', bg: '#E60023', dark: false, x: 63, y: 64, s: 36, d: 10, dx: 10, dy: 12 },
-  { slug: 'snapchat', bg: '#FFFC00', dark: true, x: 73, y: 58, s: 38, d: 9, dx: -6, dy: -12 },
-  { slug: 'reddit', bg: '#FF4500', dark: false, x: 83, y: 62, s: 38, d: 11, dx: 8, dy: 10 },
-  { slug: 'instagram', bg: 'linear-gradient(45deg,#f09433,#dc2743 55%,#bc1888)', dark: false, x: 94, y: 58, s: 38, d: 8, dx: -8, dy: -10 },
+  // baris atas: 8 ikon sejajar rata
+  { slug: 'netflix', bg: '#E50914', dark: false, x: 6.5, y: 11, s: 56, d: 8, dx: 5, dy: -6 },
+  { slug: 'spotify', bg: '#1DB954', dark: false, x: 18.9, y: 11, s: 56, d: 9, dx: -5, dy: 6 },
+  { slug: 'youtube', bg: '#FF0000', dark: false, x: 31.4, y: 11, s: 56, d: 10, dx: 5, dy: -6 },
+  { slug: 'canva', bg: '#00A7B5', dark: false, x: 43.8, y: 11, s: 56, d: 8, dx: -5, dy: 6 },
+  { slug: 'discord', bg: '#5865F2', dark: false, x: 56.2, y: 11, s: 56, d: 9, dx: 5, dy: -6 },
+  { slug: 'twitch', bg: '#9146FF', dark: false, x: 68.6, y: 11, s: 56, d: 10, dx: -5, dy: 6 },
+  { slug: 'tiktok', bg: '#161616', dark: false, x: 81.1, y: 11, s: 56, d: 8, dx: 5, dy: -6 },
+  { slug: 'x', bg: '#161616', dark: false, x: 93.5, y: 11, s: 56, d: 9, dx: -5, dy: 6 },
+  // baris bawah: 7 ikon sejajar rata
+  { slug: 'facebook', bg: '#0866FF', dark: false, x: 9.0, y: 89, s: 56, d: 9, dx: -5, dy: 6 },
+  { slug: 'telegram', bg: '#26A5E4', dark: false, x: 23.2, y: 89, s: 56, d: 10, dx: 5, dy: -6 },
+  { slug: 'whatsapp', bg: '#25D366', dark: false, x: 37.4, y: 89, s: 56, d: 11, dx: -5, dy: 6 },
+  { slug: 'pinterest', bg: '#E60023', dark: false, x: 51.6, y: 89, s: 56, d: 9, dx: 5, dy: -6 },
+  { slug: 'snapchat', bg: '#FFFC00', dark: true, x: 65.8, y: 89, s: 56, d: 10, dx: -5, dy: 6 },
+  { slug: 'reddit', bg: '#FF4500', dark: false, x: 80.0, y: 89, s: 56, d: 11, dx: 5, dy: -6 },
+  { slug: 'instagram', bg: 'linear-gradient(45deg,#f09433,#dc2743 55%,#bc1888)', dark: false, x: 94.2, y: 89, s: 56, d: 9, dx: -5, dy: 6 },
 ]
 
 function BrandTile({ b, i }: { b: Brand; i: number }) {
   const [bad, setBad] = useState(false)
-  const st = { left: `${b.x}%`, top: `${b.y}%`, width: b.s, height: b.s, background: b.bg, animationDuration: `${b.d}s`, animationDelay: `-${i * 1.3}s`, '--dx': `${b.dx}px`, '--dy': `${b.dy}px` } as CSSProperties
+  const st = { left: `${b.x}%`, top: `${b.y}%`, '--s': b.s, background: b.bg, animationDuration: `${b.d}s`, animationDelay: `-${i * 1.3}s`, '--dx': `${b.dx}px`, '--dy': `${b.dy}px` } as CSSProperties
   return (
     <span className="tile" style={st}>
-      {bad ? <b>{b.slug[0].toUpperCase()}</b> : <img src={`/brands/${b.slug}.svg`} alt="" width={Math.round(b.s * 0.52)} height={Math.round(b.s * 0.52)} className={b.dark ? '' : 'inv'} onError={() => setBad(true)} />}
+      {bad ? <b>{b.slug[0].toUpperCase()}</b> : <img src={`/brands/${b.slug}.svg`} alt="" className={b.dark ? '' : 'inv'} onError={() => setBad(true)} />}
     </span>
   )
 }
 
 // [x%, y%, durasi detik, offset detik]. Bintang jatuh terus berulang tanpa henti.
-const METEORS = [[95, 2, 6, 0], [70, -5, 7, 2], [45, 8, 8, 5], [100, 25, 5, 1], [82, 12, 9, 7], [60, 30, 6, 3], [30, -8, 7, 4], [110, 40, 8, 6], [15, 15, 9, 8]]
+const METEORS = [[95, 2, 6, 0, 150], [70, -5, 7, 2, 210], [45, 8, 8, 5, 120], [100, 25, 5, 1, 180], [82, 12, 9, 7, 140], [60, 30, 6, 3, 240], [30, -8, 7, 4, 130], [110, 40, 8, 6, 200], [15, 15, 9, 8, 110],
+  [88, -2, 5.5, 2.5, 170], [52, -6, 6.5, 6.5, 230], [105, 8, 7.5, 3.5, 100], [75, 20, 8.5, 9, 190], [38, 2, 9.5, 1.5, 150], [92, 34, 6, 5.5, 125], [22, -4, 7, 7.5, 175]]
+
+// Ranting pohon sakura dan burung untuk tema siang bergaya Jepang.
+const PETALS = Array.from({ length: 22 }, (_, k) => ({ x: (k * 4.7 + (k % 3) * 2.1) % 100, d: 11 + (k * 7) % 9, w: (k * 3.3) % 14, s: 8 + (k * 5) % 8 }))
+const BIRDS = [[14, 26, 0, 11], [22, 70, 9, 15], [9, 40, 5, 19], [18, 58, 14, 13], [12, 33, 2, 17]]
 
 // Latar angkasa dekoratif: bintang diam, bintang jatuh, dan ubin ikon aplikasi yang melayang.
 export function Space() {
   const stars = useMemo(() => {
     let s = 7; const r = () => (s = (s * 16807) % 2147483647) / 2147483647
-    return Array.from({ length: 70 }, () => ({ x: r() * 100, y: r() * 100, z: r() * 2 + 1, o: r() * 0.6 + 0.2 }))
+    return Array.from({ length: 170 }, (_, k) => ({ x: r() * 100, y: r() * 100, z: r() * 2 + 1, o: r() * 0.6 + 0.3, tw: 2 + r() * 4, dl: r() * 6, bright: k % 14 === 0 }))
   }, [])
+  const trails = useMemo(() => Array.from({ length: 16 }, (_, k) => ({ r: 14 + k * 5.5, w: 0.35 + (k % 4) * 0.12, dash: `${20 + (k * 13) % 50} ${30 + (k * 29) % 90}`, o: 0.18 + (k % 5) * 0.07 })), [])
   return (
     <div className="space" aria-hidden="true">
-      {stars.map((t, k) => <i className="star" key={k} style={{ left: `${t.x}%`, top: `${t.y}%`, width: t.z, height: t.z, opacity: t.o }} />)}
-      {METEORS.map((m, k) => <i className="shoot" key={k} style={{ left: `${m[0]}%`, top: `${m[1]}%`, '--t': `${m[2]}s`, animationDelay: `-${m[3]}s` } as CSSProperties} />)}
+      <div className="milky" />
+      {stars.map((t, k) => <i className={'star' + (t.bright ? ' b' : '')} key={k} style={{ left: `${t.x}%`, top: `${t.y}%`, width: t.bright ? t.z + 1.5 : t.z, height: t.bright ? t.z + 1.5 : t.z, opacity: t.o, animationDuration: `${t.tw}s`, animationDelay: `-${t.dl}s` }} />)}
+      <svg className="trails" viewBox="-100 -100 200 200">{trails.map((c, k) => <circle key={k} r={c.r} strokeWidth={c.w} strokeDasharray={c.dash} opacity={c.o} />)}</svg>
+      {METEORS.map((m, k) => <i className="shoot" key={k} style={{ left: `${m[0]}%`, top: `${m[1]}%`, '--t': `${m[2]}s`, '--l': `${m[4]}px`, animationDelay: `-${m[3]}s` } as CSSProperties} />)}
       <svg className="const" viewBox="0 0 100 100" preserveAspectRatio="none"><polyline points="2,16 6,22 12,19 15,27" /><polyline points="84,66 90,72 97,69" /><polyline points="20,86 26,81 32,85" /><polyline points="60,4 66,9 72,6" /></svg>
       <div className="sun" />
-      {[[8, 10, 260, 34], [40, 28, 320, 46], [66, 6, 240, 38], [18, 62, 300, 52]].map((c, k) => <i className="cloud" key={k} style={{ left: `${c[0]}%`, top: `${c[1]}%`, width: c[2], height: c[2] / 4, animationDuration: `${c[3]}s`, animationDelay: `-${k * 11}s` }} />)}
+      {[[8, 10, 260, 90], [40, 24, 320, 120], [66, 6, 240, 100], [18, 52, 300, 140]].map((c, k) => (
+        <svg className="cloud" key={k} viewBox="0 0 120 40" style={{ left: `${c[0]}%`, top: `${c[1]}%`, width: c[2], animationDuration: `${c[3]}s`, animationDelay: `-${k * 23}s` }}>
+          <path d="M10 32c-7 0-9-9-3-11 1-8 11-10 16-5 3-8 16-9 20-1 6-6 17-3 17 5 7-1 12 3 10 8 6-2 11 2 9 7H10z" />
+          <path className="mist" d="M4 36h112" />
+        </svg>
+      ))}
+      <svg className="fuji" viewBox="0 0 1200 300" preserveAspectRatio="xMidYMax slice">
+        <path className="far" d="M0 300V230l140-30 120 25 150-50 130 40 120-35 160 45 140-30 240 20v85z" />
+        <path className="mtn" d="M300 300L520 120l40-45c20-26 40-26 60 0l40 45 230 180z" />
+        <path className="cap" d="M520 120l40-45c20-26 40-26 60 0l40 45-30-8-25 14-25-16-25 16-25-14z" />
+        <path className="near" d="M0 300v-55c120-30 240-20 380 5s260 10 420-15 280-20 400 5v60z" />
+      </svg>
+      {PETALS.map((p, k) => <i className="petal" key={k} style={{ left: `${p.x}%`, width: p.s, height: p.s * 0.8, animationDuration: `${p.d}s`, animationDelay: `-${p.w}s` }} />)}
+      {BIRDS.map((b, k) => (
+        <svg className="bird" key={k} viewBox="0 0 40 20" style={{ top: `${b[1]}%`, animationDuration: `${b[3]}s`, animationDelay: `-${b[2]}s` }}>
+          <path d="M2 14Q10 2 20 12Q30 2 38 14" />
+        </svg>
+      ))}
       {BRANDS.map((b, k) => <BrandTile b={b} i={k} key={b.slug} />)}
     </div>
   )
