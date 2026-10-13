@@ -138,8 +138,8 @@ export function Space() {
       <svg className="const" viewBox="0 0 100 100" preserveAspectRatio="none">{CONSTS.map((c, k) => <polyline key={k} points={c.map((p) => p.join(',')).join(' ')} style={{ animationDelay: `-${k * 1.7}s` }} />)}</svg>
       {CONSTS.flat().map((p, k) => <i className="node" key={k} style={{ left: `${p[0]}%`, top: `${p[1]}%`, animationDelay: `-${(k % 6) * 0.9}s` }} />)}
       <div className="sun" />
-      {[[8, 300, 55, 0], [20, 380, 75, 20], [34, 240, 48, 35], [48, 340, 68, 8], [14, 280, 62, 44], [60, 360, 80, 30], [28, 220, 52, 14]].map((c, k) => (
-        <i className="cloud" key={k} style={{ top: `${c[0]}%`, width: c[1], height: c[1] / 3.6, animationDuration: `${c[2]}s, ${5 + (k % 4) * 1.5}s`, animationDelay: `-${c[3]}s, -${k * 1.3}s` }} />
+      {[[4, 9, 300, 3.6], [30, 22, 380, 4.8], [58, 5, 260, 3.2], [72, 30, 340, 5.4], [8, 46, 280, 4.2], [44, 40, 360, 3.9], [84, 12, 240, 4.6]].map((c, k) => (
+        <i className="cloud" key={k} style={{ left: `${c[0]}%`, top: `${c[1]}%`, width: c[2], height: c[2] / 3.6, animationDuration: `${c[3]}s`, animationDelay: `-${k * 0.9}s` }} />
       ))}
       <svg className="fuji" viewBox="0 0 1200 300" preserveAspectRatio="xMidYMax slice">
         <path className="far" d="M0 300V230l140-30 120 25 150-50 130 40 120-35 160 45 140-30 240 20v85z" />
