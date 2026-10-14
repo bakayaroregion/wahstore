@@ -490,3 +490,21 @@ body{background:radial-gradient(900px 560px at 30% 4%,rgba(124,58,237,.30),trans
   .day *{animation:none!important}
   .petal{display:none}
 }
+
+/* ===== Rekomendasi AI ===== */
+.cathead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}.cathead .cattitle{margin:0}
+.aibtn{display:inline-flex;gap:8px;align-items:center;padding:11px 18px;border-radius:12px;white-space:nowrap}
+.ai{max-width:860px;margin:0 auto;padding:8px 0 30px}.ai .cattitle{margin:12px 0 8px}
+.aiform{display:grid;gap:10px;margin:18px 0;padding:18px 0;border-top:1px solid var(--bd);border-bottom:1px solid var(--bd)}
+.aiform textarea{width:100%;min-height:110px;resize:vertical;border-radius:12px}
+.aihint{display:flex;justify-content:space-between;font-size:12px;color:var(--mu)}
+.aibudget{position:relative;max-width:260px}.aibudget input{padding-left:40px;width:100%}
+.aiex{display:flex;flex-wrap:wrap;gap:8px}.aiex .chip{white-space:normal;text-align:left;font-size:12px}
+.aiform .btn{justify-self:start}.aiform .btn:disabled{opacity:.5;cursor:not-allowed}
+.aisafe{font-size:12px;margin:0}
+.aires{margin-top:8px}.aires h2{margin:0 0 6px}
+.aipick{display:flex;flex-direction:column;gap:8px;min-width:0}
+.aireason{margin:0;padding:10px 12px;border-radius:12px;font-size:13px;background:rgba(124,58,237,.14);display:flex;gap:6px;align-items:flex-start}
+:root[data-theme=light] .aireason{background:rgba(255,255,255,.85)}
+:root[data-theme=light] .ai{background:rgba(255,255,255,.62);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-radius:26px;padding:24px 20px 30px}
+@media(max-width:720px){.aibtn{width:100%;justify-content:center}.aiform .btn{justify-self:stretch;justify-content:center}.aibudget{max-width:none}}

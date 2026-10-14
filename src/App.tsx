@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Link, Route, Routes, useLocation } from 'react-router-dom'
 import { supabase, configured } from './supabase'
 import { rupiah, useBrand, useCart, useFavs, useSession } from './lib'
+import { Recommend } from './pages/Recommend'
 import { Space, LangMenu, ThemeToggle, Logo, Icon } from './ui'
 import { useT } from './i18n'
 import Store, { Catalog, Favorites, ProductPage } from './pages/Store'
@@ -64,6 +65,7 @@ function Shell() {
         <Routes>
           <Route path="/" element={<Store />} />
           <Route path="/produk" element={<Catalog />} />
+          <Route path="/rekomendasi" element={<Recommend />} />
           <Route path="/produk/:slug" element={<ProductPage />} />
           <Route path="/referral" element={<Referral />} />
           <Route path="/favorit" element={<Favorites />} />

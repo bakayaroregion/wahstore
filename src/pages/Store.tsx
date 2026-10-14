@@ -19,7 +19,7 @@ function Thumb({ p, big, sm }: { p: Product; big?: boolean; sm?: boolean }) {
 function Price({ p }: { p: Product }) {
   return <div className="price">{rupiah(p.price)}{p.compare_at_price && p.compare_at_price > p.price && <s>{rupiah(p.compare_at_price)}</s>}</div>
 }
-function Gate() {
+export function Gate() {
   const t = useT()
   return (
     <div className="callout">
@@ -184,7 +184,7 @@ export function ProductPage() {
   )
 }
 
-function ProductCard({ p, inStock }: { p: Product; inStock: boolean | undefined }) {
+export function ProductCard({ p, inStock }: { p: Product; inStock: boolean | undefined }) {
   const t = useT()
   const favs = useFavs()
   const fav = favs.includes(p.id)
@@ -216,7 +216,7 @@ function ProductCard({ p, inStock }: { p: Product; inStock: boolean | undefined 
   )
 }
 
-function useProducts(session: unknown) {
+export function useProducts(session: unknown) {
   const t = useT()
   const [list, setList] = useState<Product[] | null>(null)
   const [stock, setStock] = useState<Record<string, boolean>>({})
@@ -252,7 +252,7 @@ export function Catalog() {
   if (!session) return <section className="sec"><Gate /></section>
   return (
     <section className="catalog">
-      <h1 className="cattitle">{t('Katalog Produk')}</h1>
+      <div className="cathead"><h1 className="cattitle">{t('Katalog Produk')}</h1><Link className="btn aibtn" to="/rekomendasi"><Icon n="bot" size={17} /> {t('Cari Paket dengan AI')}</Link></div>
       <div className="searchbox"><span className="fldic"><Icon n="search" size={17} /></span><input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('Cari produk')} aria-label={t('Cari produk')} /></div>
       <div className="chips scrollchips">
         <button className="chip" aria-pressed={!cat} onClick={() => setParams({})}>{t('Semua')}</button>
