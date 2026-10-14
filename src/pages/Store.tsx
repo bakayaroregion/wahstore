@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { supabase } from '../supabase'
-import { cartApi, favApi, Product, rupiah, useFavs, useSession } from '../lib'
+import { cartApi, favApi, Product, rupiah, useBrand, useFavs, useSession } from '../lib'
 import { Icon, catIcon } from '../ui'
 import { useT } from '../i18n'
 
@@ -59,20 +59,18 @@ export default function Store() {
   }, [])
 
   const nav = useNavigate()
+  const brand = useBrand()
   if (session) return <Navigate to="/produk" replace />
-  const start = session
-    ? <Link className="btn lg" to="/produk">{t('Lihat Produk')} <Icon n="arrow" size={16} /></Link>
-    : <Link className="btn lg" to="/daftar">{t('Daftar Sekarang')} <Icon n="arrow" size={16} /></Link>
 
   return (
     <>
       <section className="hero">
         <span className="badge"><Icon n="spark" size={14} /> {t('Diskon untuk pelanggan setia tiap bulan')}</span>
-        <h1>{t('Belanja')} <span className="g">{t('Produk Digital')}</span><br />{t('Jadi Lebih Mudah')}</h1>
-        <p>{t('Daftar dengan email, pilih produk, lalu lanjutkan ke WhatsApp untuk pembayaran. Belanja rutin tiap bulan, diskonnya naik.')}</p>
+        <h1>{t('Dunia Digitalmu,')}<br /><span className="g">{t('Semua dalam Satu Tempat.')}</span></h1>
+        <p>{t('Temukan berbagai kebutuhan media sosial, gaming, dan produk digital favoritmu dengan mudah di')} {brand.name}.</p>
         <div className="row c">
-          {start}
-          {wa && <a className="btn ghost lg" href={`https://wa.me/${wa}`} target="_blank" rel="noopener noreferrer">{t('Hubungi Admin')}</a>}
+          <Link className="btn lg" to={session ? '/produk' : '/daftar'}>{t('Jelajahi Produk')} <Icon n="arrow" size={16} /></Link>
+          <a className="btn ghost lg" href="#kategori" onClick={(e) => { e.preventDefault(); document.getElementById('kategori')?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }}>{t('Lihat Kategori')}</a>
         </div>
       </section>
 
@@ -84,7 +82,7 @@ export default function Store() {
         ))}
       </section>
 
-      <section className="sec">
+      <section className="sec" id="kategori">
         <h2 className="h2c">{t('Kategori')} <span className="g">{t('Tersedia')}</span></h2>
         <p className="sub">{t('Pilih kategori produk sesuai kebutuhanmu')}</p>
         <div className="cats">

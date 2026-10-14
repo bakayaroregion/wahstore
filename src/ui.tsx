@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import { DayScene } from './DayScene'
 import { Link } from 'react-router-dom'
 import { setLang, setTheme, useLang, useT, useTheme, type Lang } from './i18n'
 
@@ -106,7 +107,6 @@ function BrandTile({ b, i }: { b: Brand; i: number }) {
 const METEORS = [[95, 2, 6, 0, 150], [70, -5, 7, 2, 210], [45, 8, 8, 5, 120], [100, 25, 5, 1, 180], [82, 12, 9, 7, 140], [60, 30, 6, 3, 240], [30, -8, 7, 4, 130], [110, 40, 8, 6, 200], [15, 15, 9, 8, 110],
   [88, -2, 5.5, 2.5, 170], [52, -6, 6.5, 6.5, 230], [105, 8, 7.5, 3.5, 100], [75, 20, 8.5, 9, 190], [38, 2, 9.5, 1.5, 150], [92, 34, 6, 5.5, 125], [22, -4, 7, 7.5, 175]]
 
-const BIRDS = [[14, 26, 0, 11], [22, 70, 9, 15], [9, 40, 5, 19], [18, 58, 14, 13], [12, 33, 2, 17]]
 
 // Latar angkasa dekoratif: bintang diam, bintang jatuh, dan ubin ikon aplikasi yang melayang.
 // Rasi bintang: titik [x%, y%]. Garis dan titiknya berkedip pelan.
@@ -118,10 +118,6 @@ const CONSTS = [
   [[56, 72], [60, 78], [66, 74], [70, 80]],
   [[18, 60], [22, 66], [28, 63]],
 ]
-
-// Awan siang: kumpulan gumpalan transparan yang saling tumpuk. Posisi tetap, tiap gumpalan bergoyang sendiri seperti tertiup angin.
-const CLOUDS = [[-6, 14, 380], [24, 8, 300], [60, 6, 340], [-4, 50, 360], [30, 47, 420], [66, 52, 400], [80, 30, 360], [44, 28, 300], [14, 70, 340], [58, 74, 380]]
-const PUFFS = [[0, 30, 70, 34], [18, 12, 64, 40], [38, 38, 70, 32], [8, 52, 80, 28], [52, 22, 46, 30]]
 
 export function Space() {
   const stars = useMemo(() => {
@@ -139,32 +135,7 @@ export function Space() {
       {METEORS.map((m, k) => <i className="shoot" key={k} style={{ left: `${m[0]}%`, top: `${m[1]}%`, '--t': `${m[2]}s`, '--l': `${m[4]}px`, animationDelay: `-${m[3]}s` } as CSSProperties} />)}
       <svg className="const" viewBox="0 0 100 100" preserveAspectRatio="none">{CONSTS.map((c, k) => <polyline key={k} points={c.map((p) => p.join(',')).join(' ')} style={{ animationDelay: `-${k * 1.7}s` }} />)}</svg>
       {CONSTS.flat().map((p, k) => <i className="node" key={k} style={{ left: `${p[0]}%`, top: `${p[1]}%`, animationDelay: `-${(k % 6) * 0.9}s` }} />)}
-      <div className="sun" />
-      {CLOUDS.map((c, k) => (
-        <span className="cloudg" key={k} style={{ left: `${c[0]}%`, top: `${c[1]}%`, width: c[2], height: c[2] * 0.26 }}>
-          {PUFFS.map((q, j) => <i className="puff" key={j} style={{ left: `${q[0]}%`, top: `${q[1]}%`, width: `${q[2]}%`, height: `${q[3]}%`, animationDuration: `${1.9 + ((k + j) % 4) * 0.7}s`, animationDelay: `-${(k * 1.7 + j * 0.9).toFixed(1)}s` }} />)}
-        </span>
-      ))}
-      <svg className="fuji" viewBox="0 0 1200 300" preserveAspectRatio="xMidYMax slice">
-        <defs>
-          <linearGradient id="gFar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#d9bfe0" /><stop offset="1" stopColor="#f3c7c0" /></linearGradient>
-          <linearGradient id="gFuji" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#8f93d6" /><stop offset=".55" stopColor="#7d86c8" /><stop offset="1" stopColor="#c99fc4" /></linearGradient>
-          <linearGradient id="gMid" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#7482bd" /><stop offset="1" stopColor="#b48fb8" /></linearGradient>
-          <linearGradient id="gNear" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#4f6c9c" /><stop offset="1" stopColor="#3f4f80" /></linearGradient>
-        </defs>
-        <path d="M0 300V175l90-38 80 28 100-52 90 62 90 12 100-48 110 70 120-34 130-56 110 52 90-20 90 24v95z" fill="url(#gFar)" opacity=".9" />
-        <ellipse className="mist m1" cx="300" cy="215" rx="260" ry="14" />
-        <path d="M500 300C585 205 680 112 733 82c14-8 38-8 52 0 50 30 150 122 235 218z" fill="url(#gFuji)" />
-        <path d="M733 82c14-8 38-8 52 0 14 8 26 20 40 38l-22-8-17 17-19-15-19 16-19-16-21 10c10-14 18-24 25-42z" fill="#fff" opacity=".95" />
-        <path d="M0 300v-95l110-30 130 40 120-35 150 30 130-28 160 40 140-30 260 25v83z" fill="url(#gMid)" />
-        <ellipse className="mist m2" cx="880" cy="238" rx="300" ry="13" />
-        <path d="M0 300v-52c130-26 250-12 390 10s280 6 440-14 250-14 370 8v48z" fill="url(#gNear)" />
-      </svg>
-      {BIRDS.map((b, k) => (
-        <svg className="bird" key={k} viewBox="0 0 40 20" style={{ top: `${b[1]}%`, animationDuration: `${b[3]}s`, animationDelay: `-${b[2]}s` }}>
-          <path d="M2 14Q10 2 20 12Q30 2 38 14" />
-        </svg>
-      ))}
+      <DayScene />
       {BRANDS.map((b, k) => <BrandTile b={b} i={k} key={b.slug} />)}
     </div>
   )

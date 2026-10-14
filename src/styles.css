@@ -142,15 +142,8 @@ img.av{object-fit:cover;flex:none}
 .themebtn{display:inline-grid;place-items:center;width:36px;height:36px;border-radius:50%;border:1px solid var(--bd);background:rgba(255,255,255,.05);color:var(--tx);cursor:pointer;transition:transform .18s ease,box-shadow .18s ease}
 .themebtn:hover{transform:scale(1.1) rotate(12deg);box-shadow:0 6px 22px rgba(255,255,255,.2)}
 /* matahari & awan: hanya tampil di mode terang */
-.sun,.cloud{display:none}
-:root[data-theme=light] .sun,:root[data-theme=light] .cloud{display:block}
 :root[data-theme=light] .star,:root[data-theme=light] .shoot,:root[data-theme=light] .const{display:none}
-.sun{position:absolute;right:7%;top:-70px;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle at 40% 40%,#fffbe0 0%,#ffe17a 38%,#ffb73a 68%,#ffa51f 100%);box-shadow:0 0 80px 36px rgba(255,196,80,.6)}
-.sun::before{content:"";position:absolute;inset:-80px;border-radius:50%;background:repeating-conic-gradient(rgba(255,214,120,.65) 0 3deg,transparent 3deg 13deg);-webkit-mask:radial-gradient(circle,transparent 38%,#000 42%,transparent 70%);mask:radial-gradient(circle,transparent 38%,#000 42%,transparent 70%);animation:sunspin 80s linear infinite}
-@keyframes sunspin{to{transform:rotate(360deg)}}
-.cloud{position:absolute;border-radius:999px;background:rgba(255,255,255,.9);filter:blur(16px);animation:cloudmove 40s ease-in-out infinite alternate}
-@keyframes cloudmove{from{translate:-4vw 0}to{translate:8vw 0}}
-@media(prefers-reduced-motion:reduce){.sun::before,.cloud{animation:none}.themebtn:hover{transform:none}}
+@media(prefers-reduced-motion:reduce){.themebtn:hover{transform:none}}
 /* tema terang */
 :root[data-theme=light]{--bg:#e8f4fc;--card:rgba(255,255,255,.85);--tx:#111827;--mu:#566074;--bd:rgba(99,102,241,.22)}
 :root[data-theme=light] body{background:linear-gradient(180deg,#8fc9ea 0%,#c9e6f6 38%,#e9f6fd 75%,#f4faff 100%);background-attachment:fixed}
@@ -173,7 +166,7 @@ img.av{object-fit:cover;flex:none}
 :root[data-theme=light] .btn:hover:not(:disabled),:root[data-theme=light] .chip:hover,:root[data-theme=light] .cat:hover,:root[data-theme=light] .themebtn:hover{box-shadow:0 6px 22px rgba(99,102,241,.35)}
 :root[data-theme=light] .fcard:hover,:root[data-theme=light] .fcard:active{box-shadow:0 12px 30px rgba(99,102,241,.25)}
 :root[data-theme=light] footer{border-top-color:rgba(99,102,241,.2)}
-@media(max-width:720px){.sun{width:150px;height:150px;right:-20px}.bar nav{gap:10px;flex-wrap:wrap}}
+@media(max-width:720px){.bar nav{gap:10px;flex-wrap:wrap}}
 :root[data-theme=light] a.btn:not(.ghost){color:#fff}
 :root[data-theme=light] a.btn.ghost{color:var(--tx)}
 :root[lang=km] body,:root[lang=km] input,:root[lang=km] button{font-family:"Khmer UI","Leelawadee UI","Noto Sans Khmer","Khmer OS",system-ui,sans-serif}
@@ -408,36 +401,92 @@ body{background:radial-gradient(900px 560px at 30% 4%,rgba(124,58,237,.30),trans
 @keyframes nodeglow{0%,100%{opacity:.5}50%{opacity:1}}
 .bird{display:none}
 
-/* ===== Tema siang: langit biru, matahari besar bersinar, awan lembut, burung terbang; sentuhan Jepang: Fuji dan sakura ===== */
 :root[data-theme=light] .orb,:root[data-theme=light] .node{display:none}
-:root[data-theme=light] .sun{display:block;right:6%;top:30px;width:230px;height:230px}
-:root[data-theme=light] .bird{display:block;position:absolute;left:-60px;width:36px;height:18px;fill:none;stroke:#27324a;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;animation:birdfly 22s linear infinite;will-change:transform}
-.bird path{transform-box:fill-box;transform-origin:center bottom;animation:flap .8s ease-in-out infinite}
-@keyframes flap{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.35)}}
-@keyframes birdfly{0%{transform:translate(0,0)}25%{transform:translate(27vw,-18px)}50%{transform:translate(55vw,8px)}75%{transform:translate(82vw,-14px)}100%{transform:translate(calc(100vw + 120px),0)}}
 
 /* ===== Ikon melayang: kecil-sedang, tersebar rapi di tiga pita, redup di belakang konten ===== */
 .tile{width:calc(var(--s,34) * 1px);height:calc(var(--s,34) * 1px);border-radius:11px;opacity:.7}
 .tile img{width:52%;height:52%}
 :root[data-theme=light] .tile{opacity:.6}
-@media(max-width:720px){.tile{width:calc(var(--s,34) * .85px);height:calc(var(--s,34) * .85px);opacity:.28}.tile:nth-of-type(even){display:none}:root[data-theme=light] .sun{width:110px;height:110px;right:4%;top:64px}}
-@media(prefers-reduced-motion:reduce){.star,.orb,.node,.const polyline,.petal,.bird,.bird path,.cloud{animation:none}}
+@media(max-width:720px){.tile{width:calc(var(--s,34) * .85px);height:calc(var(--s,34) * .85px);opacity:.28}.tile:nth-of-type(even){display:none}}
+@media(prefers-reduced-motion:reduce){.star,.orb,.node,.const polyline{animation:none}}
 
-/* ===== Tema siang: senja bergaya Jepang. Matahari setengah tenggelam di balik pegunungan, awan terombang-ambing angin kencang ===== */
-:root[data-theme=light] body{background:radial-gradient(900px 420px at 42% -6%,rgba(140,150,235,.32),transparent 72%),linear-gradient(180deg,#6fb8e6 0%,#9cd0ee 30%,#cfe6f2 52%,#fbe6cf 72%,#ffcf9f 88%,#ffb98a 100%);background-attachment:fixed}
-:root[data-theme=light]{--horizon:31vh}
-:root[data-theme=light] .sun{display:block;left:27%;right:auto;top:auto;bottom:calc(var(--horizon) - 105px);width:260px;height:260px;margin-left:-130px;background:radial-gradient(circle at 50% 45%,#fff6cf 0%,#ffd36b 38%,#ff9a45 72%,#ff6f3c 100%);box-shadow:0 0 90px 46px rgba(255,150,70,.55);animation:sunpulse 4.5s ease-in-out infinite alternate}
-:root[data-theme=light] .sun::before{inset:-150px;background:repeating-conic-gradient(rgba(255,205,120,.8) 0 2.5deg,transparent 2.5deg 11deg)}
-@keyframes sunpulse{from{transform:scale(1);box-shadow:0 0 80px 38px rgba(255,150,70,.5)}to{transform:scale(1.07);box-shadow:0 0 120px 66px rgba(255,170,90,.7)}}
-.fuji{display:none}
-:root[data-theme=light] .fuji{display:block;position:absolute;left:0;bottom:0;width:100%;height:50vh;min-height:260px}
-.mist{fill:#fff;opacity:.38;filter:blur(7px);animation:mistsway 9s ease-in-out infinite alternate}
-.mist.m2{animation-duration:12s;opacity:.3}
-@keyframes mistsway{from{transform:translateX(-40px)}to{transform:translateX(40px)}}
-:root[data-theme=light] .bird{width:30px;height:15px;stroke-width:3.4;stroke:#3a2f4d}
-.cloudg{display:none}
-:root[data-theme=light] .cloudg{display:block;position:absolute}
-.puff{position:absolute;border-radius:50%;background:radial-gradient(ellipse at 50% 50%,rgba(255,255,255,1) 0%,rgba(255,255,255,.8) 42%,rgba(255,255,255,0) 76%);filter:blur(4px);animation:puffwind ease-in-out infinite alternate;will-change:transform,opacity}
-@keyframes puffwind{0%{transform:translate(-14px,-30px) scale(.9,.8);opacity:.6}50%{transform:translate(10px,8px) scale(1.18,1);opacity:1}100%{transform:translate(-6px,32px) scale(1.3,1.16);opacity:.8}}
-@media(prefers-reduced-motion:reduce){.puff,.mist,:root[data-theme=light] .sun{animation:none}}
-@media(max-width:720px){:root[data-theme=light]{--horizon:14vh}:root[data-theme=light] .sun{width:150px;height:150px;margin-left:-75px;left:50%;bottom:calc(var(--horizon) - 70px)}:root[data-theme=light] .sun::before{inset:-80px}:root[data-theme=light] .fuji{height:32vh}}
+/* ===== Tema siang: Japanese Skyscape (senja). Hanya tampil saat data-theme=light; tema malam tidak disentuh ===== */
+.day{display:none}
+:root[data-theme=light] .star,:root[data-theme=light] .shoot,:root[data-theme=light] .const{display:none}
+:root[data-theme=light] .day{display:block;position:absolute;inset:0;overflow:hidden;--landH:clamp(210px,36vh,380px);--lift:12vh;--lw:clamp(calc(var(--landH) * 3.2),112vw,179vh);--wh:calc(var(--lw) / 3.2);--sx:75.6%;--k:1}
+:root[data-theme=light] body{background:linear-gradient(180deg,#5ea6e6 0%,#b9d8ee 50%,#ffc999 100%);background-attachment:fixed}
+.d-sky{position:absolute;inset:0;background:linear-gradient(180deg,#4e9be0 0%,#7fbaee 20%,#b4d5f0 38%,#f5dcc9 56%,#ffcf9f 72%,#ffb57a 100%)}
+.d-glow{position:absolute;left:0;right:0;bottom:0;height:62%;background:radial-gradient(ellipse 55% 60% at 76% 78%,rgba(255,214,130,.6),rgba(255,214,130,0) 70%),linear-gradient(0deg,rgba(255,196,140,.55),rgba(255,196,140,0))}
+.lbox{position:absolute;left:50%;bottom:0;width:var(--lw);height:var(--wh);margin-left:calc(var(--lw) / -2)}
+.lbox svg{position:absolute;inset:0;width:100%;height:100%}
+.lbox.sunbox,.lbox.land{bottom:var(--lift)}
+/* matahari */
+.sun2{position:absolute;left:var(--sx);top:46%;width:15%;aspect-ratio:1;transform:translate(-50%,-50%)}
+.sun2 i{position:absolute;border-radius:50%;display:block}
+.sun2 .disc{inset:0;background:radial-gradient(circle at 50% 46%,#fffdf0 0,#ffeaa8 34%,#ffc65e 70%,#ff9f45 100%);box-shadow:0 0 36px 12px rgba(255,196,96,.7),0 0 130px 56px rgba(255,160,80,.38)}
+.sun2 .halo{inset:-130%;background:radial-gradient(circle,rgba(255,228,150,.72) 0,rgba(255,192,120,.36) 26%,rgba(255,192,120,0) 62%);animation:halo 7s ease-in-out infinite alternate;will-change:transform,opacity}
+.sun2 .rays{inset:-95%;background:repeating-conic-gradient(rgba(255,226,150,.55) 0 2.5deg,transparent 2.5deg 12deg);-webkit-mask:radial-gradient(circle,transparent 21%,#000 25%,transparent 60%);mask:radial-gradient(circle,transparent 21%,#000 25%,transparent 60%);opacity:.7;animation:spin 140s linear infinite;will-change:transform}
+@keyframes halo{from{opacity:.7;transform:scale(.94)}to{opacity:1;transform:scale(1.08)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* awan berlapis: tiap lapis = jalur 200% lebar berisi dua separuh identik, bergeser -50% tanpa putus */
+.clayer{position:absolute;left:0;width:100%}
+.clayer.far{top:5vh;height:26vh;opacity:.78}
+.clayer.mid{bottom:calc(var(--lift) + var(--wh) * .28);height:calc(var(--wh) * .52)}
+.clayer.high{bottom:calc(var(--lift) + var(--wh) * .56);height:34vh}
+.ctrack{position:absolute;left:0;top:0;width:200%;height:100%;display:flex;animation:drift linear infinite;will-change:transform}
+.ctrack.rv{animation-direction:reverse}
+.chalf{position:relative;width:50%;height:100%;flex:none}
+.cl{position:absolute;top:var(--y);left:calc(var(--f) * (100% - var(--w) * var(--k)));width:calc(var(--w) * var(--k));aspect-ratio:2.5;animation:bob var(--bob) ease-in-out infinite alternate;animation-delay:var(--dl);will-change:transform}
+.cl i{display:block;width:100%;height:100%}
+.cl .a{background:radial-gradient(ellipse 22.0% 34.0% at 16% 62%,rgba(255,255,255,.97) 0,rgba(255,255,255,.88) 38%,rgba(255,255,255,0) 72%),radial-gradient(ellipse 24.0% 50.0% at 34% 44%,rgba(255,255,255,.97) 0,rgba(255,255,255,.88) 38%,rgba(255,255,255,0) 72%),radial-gradient(ellipse 26.0% 52.8% at 54% 38%,rgba(255,255,255,.97) 0,rgba(255,255,255,.88) 38%,rgba(255,255,255,0) 72%),radial-gradient(ellipse 22.0% 46.0% at 74% 50%,rgba(255,255,255,.97) 0,rgba(255,255,255,.88) 38%,rgba(255,255,255,0) 72%),radial-gradient(ellipse 13.9% 32.0% at 90% 66%,rgba(255,255,255,.97) 0,rgba(255,255,255,.88) 38%,rgba(255,255,255,0) 72%),radial-gradient(ellipse 44% 24% at 50% 74%,rgba(255,206,160,.95) 0,rgba(255,176,120,.5) 46%,rgba(255,176,120,0) 76%),radial-gradient(ellipse 48% 14% at 50% 86%,rgba(255,150,100,.5),rgba(255,170,110,0) 70%)}
+.cl .b{background:radial-gradient(ellipse 26.0% 40.0% at 20% 60%,rgba(255,255,255,.97) 0,rgba(255,255,255,.88) 38%,rgba(255,255,255,0) 72%),radial-gradient(ellipse 28.0% 55.6% at 42% 40%,rgba(255,255,255,.97) 0,rgba(255,255,255,.88) 38%,rgba(255,255,255,0) 72%),radial-gradient(ellipse 28.0% 46.0% at 64% 52%,rgba(255,255,255,.97) 0,rgba(255,255,255,.88) 38%,rgba(255,255,255,0) 72%),radial-gradient(ellipse 20.0% 34.0% at 84% 64%,rgba(255,255,255,.97) 0,rgba(255,255,255,.88) 38%,rgba(255,255,255,0) 72%),radial-gradient(ellipse 44% 24% at 50% 74%,rgba(255,206,160,.95) 0,rgba(255,176,120,.5) 46%,rgba(255,176,120,0) 76%),radial-gradient(ellipse 48% 14% at 50% 86%,rgba(255,160,110,.45),rgba(255,170,110,0) 70%)}
+.cl .c{background:radial-gradient(ellipse 16.7% 30.0% at 12% 66%,rgba(255,255,255,.97) 0,rgba(255,255,255,.88) 38%,rgba(255,255,255,0) 72%),radial-gradient(ellipse 20.0% 48.0% at 28% 48%,rgba(255,255,255,.97) 0,rgba(255,255,255,.88) 38%,rgba(255,255,255,0) 72%),radial-gradient(ellipse 22.0% 50.0% at 46% 36%,rgba(255,255,255,.97) 0,rgba(255,255,255,.88) 38%,rgba(255,255,255,0) 72%),radial-gradient(ellipse 24.0% 52.0% at 66% 44%,rgba(255,255,255,.97) 0,rgba(255,255,255,.88) 38%,rgba(255,255,255,0) 72%),radial-gradient(ellipse 22.0% 40.0% at 82% 58%,rgba(255,255,255,.97) 0,rgba(255,255,255,.88) 38%,rgba(255,255,255,0) 72%),radial-gradient(ellipse 8.3% 26.0% at 94% 70%,rgba(255,255,255,.97) 0,rgba(255,255,255,.88) 38%,rgba(255,255,255,0) 72%),radial-gradient(ellipse 44% 24% at 50% 74%,rgba(255,206,160,.95) 0,rgba(255,176,120,.5) 46%,rgba(255,176,120,0) 76%),radial-gradient(ellipse 48% 14% at 50% 86%,rgba(255,140,100,.55),rgba(255,170,110,0) 70%)}
+@keyframes drift{from{transform:translate3d(0,0,0)}to{transform:translate3d(-50%,0,0)}}
+@keyframes bob{from{transform:translate3d(0,calc(var(--amp) * -1),0)}to{transform:translate3d(0,var(--amp),0)}}
+/* kabut di sela gunung */
+.mist{position:absolute;left:-25%;width:150%;border-radius:50%;background:radial-gradient(ellipse at 50% 50%,rgba(255,238,228,.6) 0,rgba(255,238,228,0) 70%);animation:mist 28s ease-in-out infinite alternate;will-change:transform,opacity;display:block}
+.mist.m1{top:60%;height:17%}
+.mist.m2{top:72%;height:15%;animation-duration:36s;animation-direction:alternate-reverse}
+.mist.m3{top:80%;height:14%;animation-duration:32s}
+@keyframes mist{from{transform:translate3d(-7%,0,0);opacity:.5}to{transform:translate3d(7%,0,0);opacity:.95}}
+/* sakura */
+.sakura{position:absolute;right:-3vw;bottom:0;height:min(64vh,580px);aspect-ratio:420/640}
+.branch{position:absolute;left:-10px;top:56px;width:min(34vw,380px)}
+.sw,.sw2{animation:sway 7s ease-in-out infinite alternate;will-change:transform}
+.sw{transform-origin:62% 100%;transform-box:view-box}
+.sw2{transform-origin:0 0;transform-box:view-box;animation-duration:9s}
+@keyframes sway{from{transform:rotate(-.9deg)}to{transform:rotate(1deg)}}
+.petal{position:absolute;top:0;animation:pfall linear infinite;will-change:transform}
+.pt{display:block;border-radius:80% 0 80% 0;background:linear-gradient(135deg,#ffe6ee,#ffa7c4);animation:psway ease-in-out infinite alternate}
+.pt.h1{background:linear-gradient(135deg,#fff0f4,#ffc2d6)}.pt.h2{background:linear-gradient(135deg,#ffd9e5,#f58fb2)}
+@keyframes pfall{from{transform:translate3d(0,-6vh,0)}to{transform:translate3d(var(--dx),108vh,0)}}
+@keyframes psway{from{transform:translate3d(-14px,0,0) rotate(0)}to{transform:translate3d(14px,0,0) rotate(var(--rot))}}
+/* burung */
+:root[data-theme=light] .bird{display:block;position:absolute;left:-60px;width:30px;height:15px;fill:none;stroke:#3a2f4d;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round;animation:birdfly 28s linear infinite;will-change:transform}
+.bird path{transform-box:fill-box;transform-origin:center bottom;animation:flap .8s ease-in-out infinite}
+@keyframes flap{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.35)}}
+@keyframes birdfly{0%{transform:translate3d(0,0,0)}25%{transform:translate3d(27vw,-18px,0)}50%{transform:translate3d(55vw,8px,0)}75%{transform:translate3d(82vw,-14px,0)}100%{transform:translate3d(calc(100vw + 120px),0,0)}}
+/* keterbacaan di atas pemandangan */
+:root[data-theme=light] .hero{position:relative;isolation:isolate}
+:root[data-theme=light] .hero::before{content:"";position:absolute;inset:-24px 0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse 58% 64% at 50% 52%,rgba(255,255,255,.5),rgba(255,255,255,.2) 55%,rgba(255,255,255,0) 78%)}
+:root[data-theme=light] .hero h1{text-shadow:0 2px 18px rgba(255,255,255,.7)}
+:root[data-theme=light] .hero p{color:#2b3650;text-shadow:0 1px 12px rgba(255,255,255,.8)}
+:root[data-theme=light] .sec{background:rgba(255,255,255,.62);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-radius:26px;padding:34px 20px;margin-bottom:16px;border:1px solid rgba(255,255,255,.7)}
+:root[data-theme=light] .fcard,:root[data-theme=light] .cat,:root[data-theme=light] .pcard,:root[data-theme=light] .card,:root[data-theme=light] .box{background:rgba(255,255,255,.9);border-color:rgba(255,255,255,.85);box-shadow:0 8px 26px rgba(59,76,140,.14)}
+:root[data-theme=light] .pcard:hover,:root[data-theme=light] .cat:hover{box-shadow:0 14px 34px rgba(99,102,241,.28)}
+:root[data-theme=light] footer{background:rgba(255,255,255,.66);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+:root[data-theme=light] .tile{opacity:.5}
+#kategori{scroll-margin-top:80px}
+@media(max-width:1000px){:root[data-theme=light] .day{--sx:64%}}
+@media(max-width:720px){
+  :root[data-theme=light] .day{--lift:4vh;--landH:clamp(230px,34vh,320px);--sx:69%;--k:1.8}
+  .clayer.far,.bird:nth-of-type(n+2){display:none}
+  .petal:nth-of-type(n+10){display:none}
+  .sakura{height:36vh;right:-8vw}
+  .branch{width:46vw}
+  :root[data-theme=light] .sec{padding:26px 12px;border-radius:20px}
+}
+@media(prefers-reduced-motion:reduce){
+  .day *{animation:none!important}
+  .petal{display:none}
+}
