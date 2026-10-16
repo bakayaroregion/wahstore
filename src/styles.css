@@ -81,9 +81,9 @@ table{border-collapse:collapse;width:100%;min-width:640px}th,td{text-align:left;
 
 .shoot{position:absolute;width:150px;height:2px;border-radius:2px;background:linear-gradient(90deg,#fff,rgba(167,139,250,.7) 35%,transparent);opacity:0;filter:drop-shadow(0 0 5px #a78bfa);animation:shoot var(--t,6s) linear infinite;will-change:transform}
 @keyframes shoot{0%{transform:translate(0,0) rotate(-45deg);opacity:0}4%{opacity:1}34%{transform:translate(-560px,560px) rotate(-45deg);opacity:0}100%{transform:translate(-560px,560px) rotate(-45deg);opacity:0}}
-.tile{position:absolute;border-radius:11px;display:grid;place-items:center;color:#fff;opacity:.85;box-shadow:0 8px 20px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.25);animation:drift 9s ease-in-out infinite;will-change:transform}
+.tile{position:absolute;border-radius:11px;display:grid;place-items:center;color:#fff;opacity:.85;box-shadow:0 6px 16px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.2);animation:tfloat 16s cubic-bezier(.45,0,.55,1) infinite;will-change:transform}
 .tile img{display:block}.tile img.inv{filter:brightness(0) invert(1)}.tile b{font-size:16px}
-@keyframes drift{0%,100%{transform:translate(0,0) rotate(-3deg)}50%{transform:translate(var(--dx,0),var(--dy,-12px)) rotate(4deg)}}
+@keyframes tfloat{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(calc(var(--dx,0px) * .6),calc(var(--dy,-12px) * .6),0)}}
 @media(max-width:720px){.tile{opacity:.28}}
 @media(prefers-reduced-motion:reduce){.tile,.shoot{animation:none}.shoot{display:none}html{scroll-behavior:auto}}.const{position:absolute;inset:0;width:100%;height:100%;fill:none;stroke:rgba(167,139,250,.35);stroke-width:1;vector-effect:non-scaling-stroke}
 .const polyline{vector-effect:non-scaling-stroke}
@@ -162,7 +162,7 @@ img.av{object-fit:cover;flex:none}
 :root[data-theme=light] .tag{background:rgba(124,58,237,.14);color:#5b21b6}
 :root[data-theme=light] .ic.sm{color:#6d28d9}
 :root[data-theme=light] .rev blockquote::before{color:#6d28d9}
-:root[data-theme=light] .tile{opacity:.95;box-shadow:0 8px 18px rgba(30,41,90,.25),inset 0 1px 0 rgba(255,255,255,.3)}
+:root[data-theme=light] .tile{box-shadow:0 5px 14px rgba(30,41,90,.16),inset 0 1px 0 rgba(255,255,255,.3)}
 :root[data-theme=light] .btn:hover:not(:disabled),:root[data-theme=light] .chip:hover,:root[data-theme=light] .cat:hover,:root[data-theme=light] .themebtn:hover{box-shadow:0 6px 22px rgba(99,102,241,.35)}
 :root[data-theme=light] .fcard:hover,:root[data-theme=light] .fcard:active{box-shadow:0 12px 30px rgba(99,102,241,.25)}
 :root[data-theme=light] footer{border-top-color:rgba(99,102,241,.2)}
@@ -404,7 +404,7 @@ body{background:radial-gradient(900px 560px at 30% 4%,rgba(124,58,237,.30),trans
 :root[data-theme=light] .orb,:root[data-theme=light] .node{display:none}
 
 /* ===== Ikon melayang: kecil-sedang, tersebar rapi di tiga pita, redup di belakang konten ===== */
-.tile{width:calc(var(--s,34) * 1px);height:calc(var(--s,34) * 1px);border-radius:11px;opacity:.7}
+.tile{width:calc(var(--s,34) * 1px);height:calc(var(--s,34) * 1px);border-radius:11px;opacity:.55}
 .tile img{width:52%;height:52%}
 :root[data-theme=light] .tile{opacity:.6}
 @media(max-width:720px){.tile{width:calc(var(--s,34) * .85px);height:calc(var(--s,34) * .85px);opacity:.28}.tile:nth-of-type(even){display:none}}
@@ -433,7 +433,7 @@ body{background:radial-gradient(900px 560px at 30% 4%,rgba(124,58,237,.30),trans
 .clayer.far{top:5vh;height:26vh;opacity:.78}
 .clayer.mid{bottom:calc(var(--lift) + var(--wh) * .28);height:calc(var(--wh) * .52)}
 .clayer.high{bottom:calc(var(--lift) + var(--wh) * .56);height:34vh}
-.ctrack{position:absolute;left:0;top:0;width:200%;height:100%;display:flex;animation:drift linear infinite;will-change:transform}
+.ctrack{position:absolute;left:0;top:0;width:200%;height:100%;display:flex;animation:cdrift linear infinite;will-change:transform}
 .ctrack.rv{animation-direction:reverse}
 .chalf{position:relative;width:50%;height:100%;flex:none}
 .cl{position:absolute;top:var(--y);left:calc(var(--f) * (100% - var(--w) * var(--k)));width:calc(var(--w) * var(--k));aspect-ratio:2.5;animation:bob var(--bob) ease-in-out infinite alternate;animation-delay:var(--dl);will-change:transform}
@@ -441,7 +441,7 @@ body{background:radial-gradient(900px 560px at 30% 4%,rgba(124,58,237,.30),trans
 .cl .a{background:radial-gradient(ellipse 22.0% 34.0% at 16% 62%,rgba(255,255,255,.97) 0,rgba(255,255,255,.88) 38%,rgba(255,255,255,0) 72%),radial-gradient(ellipse 24.0% 50.0% at 34% 44%,rgba(255,255,255,.97) 0,rgba(255,255,255,.88) 38%,rgba(255,255,255,0) 72%),radial-gradient(ellipse 26.0% 52.8% at 54% 38%,rgba(255,255,255,.97) 0,rgba(255,255,255,.88) 38%,rgba(255,255,255,0) 72%),radial-gradient(ellipse 22.0% 46.0% at 74% 50%,rgba(255,255,255,.97) 0,rgba(255,255,255,.88) 38%,rgba(255,255,255,0) 72%),radial-gradient(ellipse 13.9% 32.0% at 90% 66%,rgba(255,255,255,.97) 0,rgba(255,255,255,.88) 38%,rgba(255,255,255,0) 72%),radial-gradient(ellipse 44% 24% at 50% 74%,rgba(255,206,160,.95) 0,rgba(255,176,120,.5) 46%,rgba(255,176,120,0) 76%),radial-gradient(ellipse 48% 14% at 50% 86%,rgba(255,150,100,.5),rgba(255,170,110,0) 70%)}
 .cl .b{background:radial-gradient(ellipse 26.0% 40.0% at 20% 60%,rgba(255,255,255,.97) 0,rgba(255,255,255,.88) 38%,rgba(255,255,255,0) 72%),radial-gradient(ellipse 28.0% 55.6% at 42% 40%,rgba(255,255,255,.97) 0,rgba(255,255,255,.88) 38%,rgba(255,255,255,0) 72%),radial-gradient(ellipse 28.0% 46.0% at 64% 52%,rgba(255,255,255,.97) 0,rgba(255,255,255,.88) 38%,rgba(255,255,255,0) 72%),radial-gradient(ellipse 20.0% 34.0% at 84% 64%,rgba(255,255,255,.97) 0,rgba(255,255,255,.88) 38%,rgba(255,255,255,0) 72%),radial-gradient(ellipse 44% 24% at 50% 74%,rgba(255,206,160,.95) 0,rgba(255,176,120,.5) 46%,rgba(255,176,120,0) 76%),radial-gradient(ellipse 48% 14% at 50% 86%,rgba(255,160,110,.45),rgba(255,170,110,0) 70%)}
 .cl .c{background:radial-gradient(ellipse 16.7% 30.0% at 12% 66%,rgba(255,255,255,.97) 0,rgba(255,255,255,.88) 38%,rgba(255,255,255,0) 72%),radial-gradient(ellipse 20.0% 48.0% at 28% 48%,rgba(255,255,255,.97) 0,rgba(255,255,255,.88) 38%,rgba(255,255,255,0) 72%),radial-gradient(ellipse 22.0% 50.0% at 46% 36%,rgba(255,255,255,.97) 0,rgba(255,255,255,.88) 38%,rgba(255,255,255,0) 72%),radial-gradient(ellipse 24.0% 52.0% at 66% 44%,rgba(255,255,255,.97) 0,rgba(255,255,255,.88) 38%,rgba(255,255,255,0) 72%),radial-gradient(ellipse 22.0% 40.0% at 82% 58%,rgba(255,255,255,.97) 0,rgba(255,255,255,.88) 38%,rgba(255,255,255,0) 72%),radial-gradient(ellipse 8.3% 26.0% at 94% 70%,rgba(255,255,255,.97) 0,rgba(255,255,255,.88) 38%,rgba(255,255,255,0) 72%),radial-gradient(ellipse 44% 24% at 50% 74%,rgba(255,206,160,.95) 0,rgba(255,176,120,.5) 46%,rgba(255,176,120,0) 76%),radial-gradient(ellipse 48% 14% at 50% 86%,rgba(255,140,100,.55),rgba(255,170,110,0) 70%)}
-@keyframes drift{from{transform:translate3d(0,0,0)}to{transform:translate3d(-50%,0,0)}}
+@keyframes cdrift{from{transform:translate3d(0,0,0)}to{transform:translate3d(-50%,0,0)}}
 @keyframes bob{from{transform:translate3d(0,calc(var(--amp) * -1),0)}to{transform:translate3d(0,var(--amp),0)}}
 /* kabut di sela gunung */
 .mist{position:absolute;left:-25%;width:150%;border-radius:50%;background:radial-gradient(ellipse at 50% 50%,rgba(255,238,228,.6) 0,rgba(255,238,228,0) 70%);animation:mist 28s ease-in-out infinite alternate;will-change:transform,opacity;display:block}
@@ -475,7 +475,8 @@ body{background:radial-gradient(900px 560px at 30% 4%,rgba(124,58,237,.30),trans
 :root[data-theme=light] .fcard,:root[data-theme=light] .cat,:root[data-theme=light] .pcard,:root[data-theme=light] .card,:root[data-theme=light] .box{background:rgba(255,255,255,.9);border-color:rgba(255,255,255,.85);box-shadow:0 8px 26px rgba(59,76,140,.14)}
 :root[data-theme=light] .pcard:hover,:root[data-theme=light] .cat:hover{box-shadow:0 14px 34px rgba(99,102,241,.28)}
 :root[data-theme=light] footer{background:rgba(255,255,255,.66);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
-:root[data-theme=light] .tile{opacity:.5}
+:root[data-theme=light] .tile{opacity:.42}
+:root[data-theme=light] .tile:nth-of-type(3n){display:none}
 #kategori{scroll-margin-top:80px}
 @media(max-width:1000px){:root[data-theme=light] .day{--sx:64%}}
 @media(max-width:720px){

@@ -95,7 +95,7 @@ const BRANDS: Brand[] = [
 
 function BrandTile({ b, i }: { b: Brand; i: number }) {
   const [bad, setBad] = useState(false)
-  const st = { left: `${b.x}%`, top: `${b.y}%`, '--s': b.s, background: b.bg, animationDuration: `${b.d}s`, animationDelay: `-${i * 1.3}s`, '--dx': `${b.dx}px`, '--dy': `${b.dy}px` } as CSSProperties
+  const st = { left: `${b.x}%`, top: `${b.y}%`, '--s': b.s, background: b.bg, animationDuration: `${b.d * 1.8}s`, animationDelay: `-${i * 2.1}s`, '--dx': `${b.dx}px`, '--dy': `${b.dy}px` } as CSSProperties
   return (
     <span className="tile" style={st}>
       {bad ? <b>{b.slug[0].toUpperCase()}</b> : <img src={`/brands/${b.slug}.svg`} alt="" className={b.dark ? '' : 'inv'} onError={() => setBad(true)} />}
